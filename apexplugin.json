@@ -3,9 +3,9 @@
   "version" : "0.1",
   "description" : "Simple Google Map region plugin",
   "keywords" : ["map"],
-  "homepage" : "https://bitbucket.org/jk64/jk64-plugin-simplemap",
+  "homepage" : "https://github.com/jeffreykemp/jk64-plugin-simplemap",
   "bugs" : {
-    "url" : "https://bitbucket.org/jk64/jk64-plugin-simplemap/issues",
+    "url" : "https://github.com/jeffreykemp/jk64-plugin-simplemap/issues",
     "email" : "jeffrey.kemp@jk64.com"
   },
   "license" : "MIT",
@@ -16,7 +16,7 @@
   },
   "repository" : {
     "type" : "git",
-    "url" : "https://bitbucket.org/jk64/jk64-plugin-simplemap"
+    "url" : "https://github.com/jeffreykemp/jk64-plugin-simplemap"
   },
  "oracle" : {
     "versions" : ["11.2.0.1", "12.1.0.1"],
@@ -26,7 +26,7 @@
         "internalName" : "COM.JK64.SIMPLE_GOOGLE_MAP",
         "type" : "region",
         "demo" : "https://apex.oracle.com/pls/apex/f?p=JK64_SIMPLE_MAP",
-        "previewImage" : "https://bitbucket.org/repo/kb9jEy/images/3111208130-plugin-simplemap-preview.png"
+        "previewImage" : "https://raw.githubusercontent.com/jeffreykemp/jk64-plugin-simplemap/master/plugin-simplemap-preview.png"
       }
     }
   }
