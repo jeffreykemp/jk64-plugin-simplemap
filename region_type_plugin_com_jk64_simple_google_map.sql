@@ -53,6 +53,7 @@ wwv_flow_api.create_plugin(
 '    l_region_height plugin_attr := p_region.attribute_03;',
 '    l_item_name     plugin_attr := p_region.attribute_04;',
 '    l_marker_zoom   plugin_attr := p_region.attribute_05;',
+'    l_icon          plugin_attr := p_region.attribute_06;',
 '    l_lat NUMBER;',
 '    l_lng NUMBER;',
 'begin',
@@ -81,7 +82,7 @@ wwv_flow_api.create_plugin(
 '      marker.setMap(map);',
 '      marker.setPosition(pos);',
 '    } else {',
-'      marker = new google.maps.Marker({map: map, position: pos});',
+'      marker = new google.maps.Marker({map: map, position: pos, icon: "#ICON#"});',
 '    }',
 '  } else if (marker) {',
 '    marker.setMap(null);',
@@ -129,13 +130,15 @@ wwv_flow_api.create_plugin(
 '<div id="#REGION_ID#_map" style="min-height:#HEIGHT#px"></div>',
 ']'';',
 '  ',
-'  l_html := REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(l_html',
+'  l_html := REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(',
+'    l_html',
 '    ,''#LAT#'',          l_lat)',
 '    ,''#LNG#'',          l_lng)',
 '    ,''#ZOOM#'',         l_zoom)',
 '    ,''#HEIGHT#'',       l_region_height)',
 '    ,''#ITEM#'',         l_item_name)',
 '    ,''#MARKERZOOM#'',   l_marker_zoom)',
+'    ,''#ICON#'',         l_icon)',
 '    ,''#REGION_ID#'',    CASE',
 '                       WHEN p_region.static_id IS NOT NULL',
 '                       THEN p_region.static_id',
@@ -156,8 +159,8 @@ wwv_flow_api.create_plugin(
 ||'P1_MY_ITEM", "You clicked at: " + this.data.lat + "," + this.data.lng);</code>. You can also manipulate the map, e.g. map.setZoom(4) to zoom in on the chosen location.',
 '<BR>',
 'To set the Marker position at runtime call <code>setMarker(lat,lng)</code> with the desired latitude and longitude. Note that calling setMarker will NOT fire the "mapClick" event.'))
-,p_version_identifier=>'0.1'
-,p_plugin_comment=>'Get latest version, send feedback and raise issues at: https://bitbucket.org/jk64/jk64-plugin-simplemap'
+,p_version_identifier=>'0.2'
+,p_about_url=>'https://github.com/jeffreykemp/jk64-plugin-simplemap'
 );
 wwv_flow_api.create_plugin_attribute(
  p_id=>wwv_flow_api.id(66016458240245999)
@@ -234,6 +237,33 @@ wwv_flow_api.create_plugin_attribute(
 ,p_supported_ui_types=>'DESKTOP'
 ,p_is_translatable=>false
 ,p_help_text=>'If a marker is set or moved, zoom the map to this level. Leave blank to make the map not zoom when the marker is moved.'
+);
+wwv_flow_api.create_plugin_attribute(
+ p_id=>wwv_flow_api.id(69924777816380252)
+,p_plugin_id=>wwv_flow_api.id(65986014849483781)
+,p_attribute_scope=>'COMPONENT'
+,p_attribute_sequence=>6
+,p_display_sequence=>60
+,p_prompt=>'Marker Icon'
+,p_attribute_type=>'TEXT'
+,p_is_required=>false
+,p_max_length=>4000
+,p_supported_ui_types=>'DESKTOP'
+,p_is_translatable=>false
+,p_examples=>wwv_flow_utilities.join(wwv_flow_t_varchar2(
+'http://maps.google.com/mapfiles/ms/icons/blue-dot.png',
+'http://maps.google.com/mapfiles/ms/icons/red-dot.png',
+'http://maps.google.com/mapfiles/ms/icons/purple-dot.png',
+'http://maps.google.com/mapfiles/ms/icons/yellow-dot.png',
+'http://maps.google.com/mapfiles/ms/icons/green-dot.png',
+'http://maps.google.com/mapfiles/ms/icons/ylw-pushpin.png',
+'http://maps.google.com/mapfiles/ms/icons/blue-pushpin.png',
+'http://maps.google.com/mapfiles/ms/icons/grn-pushpin.png',
+'http://maps.google.com/mapfiles/ms/icons/ltblu-pushpin.png',
+'http://maps.google.com/mapfiles/ms/icons/pink-pushpin.png',
+'http://maps.google.com/mapfiles/ms/icons/purple-pushpin.png',
+'http://maps.google.com/mapfiles/ms/icons/red-pushpin.png'))
+,p_help_text=>'URL to the icon to show for the marker. Leave blank for the default red Google pin.'
 );
 wwv_flow_api.create_plugin_event(
  p_id=>wwv_flow_api.id(65999677618912872)

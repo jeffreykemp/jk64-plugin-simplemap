@@ -16,6 +16,7 @@ as
     l_region_height plugin_attr := p_region.attribute_03;
     l_item_name     plugin_attr := p_region.attribute_04;
     l_marker_zoom   plugin_attr := p_region.attribute_05;
+    l_icon          plugin_attr := p_region.attribute_06;
     l_lat NUMBER;
     l_lng NUMBER;
 begin
@@ -44,7 +45,7 @@ function setMarker(map,lat,lng) {
       marker.setMap(map);
       marker.setPosition(pos);
     } else {
-      marker = new google.maps.Marker({map: map, position: pos});
+      marker = new google.maps.Marker({map: map, position: pos, icon: "#ICON#"});
     }
   } else if (marker) {
     marker.setMap(null);
@@ -92,13 +93,15 @@ window.onload = function() {
 <div id="#REGION_ID#_map" style="min-height:#HEIGHT#px"></div>
 ]';
   
-  l_html := REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(l_html
+  l_html := REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+    l_html
     ,'#LAT#',          l_lat)
     ,'#LNG#',          l_lng)
     ,'#ZOOM#',         l_zoom)
     ,'#HEIGHT#',       l_region_height)
     ,'#ITEM#',         l_item_name)
     ,'#MARKERZOOM#',   l_marker_zoom)
+    ,'#ICON#',         l_icon)
     ,'#REGION_ID#',    CASE
                        WHEN p_region.static_id IS NOT NULL
                        THEN p_region.static_id
