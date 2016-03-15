@@ -62,7 +62,7 @@ function geocode_#REGION#(geocoder) {
   , function(results, status) {
     if (status === google.maps.GeocoderStatus.OK) {
       var pos = results[0].geometry.location;
-      console.log("#REGION# geocode ok");
+      apex.debug("#REGION# geocode ok");
       map_#REGION#.setCenter(pos);
       map_#REGION#.panTo(pos);
       if ("#MARKERZOOM#" != "") {
@@ -70,7 +70,7 @@ function geocode_#REGION#(geocoder) {
       }
       setMarker_#REGION#(pos.lat(), pos.lng())
     } else {
-      console.log("#REGION# geocode was unsuccessful for the following reason: "+status);
+      apex.debug("#REGION# geocode was unsuccessful for the following reason: "+status);
     }
   });
 }
