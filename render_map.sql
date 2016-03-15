@@ -69,6 +69,9 @@ function geocode_#REGION#(geocoder) {
         map_#REGION#.setZoom(#MARKERZOOM#);
       }
       setMarker_#REGION#(pos.lat(), pos.lng())
+      if ("#ITEM#" !== "") {
+        $s("#ITEM#",pos.lat()+","+pos.lng());
+      }
     } else {
       apex.debug("#REGION# geocode was unsuccessful for the following reason: "+status);
     }
@@ -76,16 +79,21 @@ function geocode_#REGION#(geocoder) {
 }
 function setMarker_#REGION#(lat,lng) {
   if (lat !== null && lng !== null) {
-    var pos = new google.maps.LatLng(lat,lng);
-    map_#REGION#.panTo(pos);
-    if ("#MARKERZOOM#" != "") {
-      map_#REGION#.setZoom(#MARKERZOOM#);
-    }
-    if (marker_#REGION#) {
-      marker_#REGION#.setMap(map_#REGION#);
-      marker_#REGION#.setPosition(pos);
+    var oldpos = marker_#REGION#?marker_#REGION#.getPosition():new google.maps.LatLng(0,0);
+    if (lat == oldpos.lat() && lng == oldpos.lng()) {
+      apex.debug("#REGION# marker not changed");
     } else {
-      marker_#REGION# = new google.maps.Marker({map: map_#REGION#, position: pos, icon: "#ICON#"});
+      var pos = new google.maps.LatLng(lat,lng);
+      map_#REGION#.panTo(pos);
+      if ("#MARKERZOOM#" != "") {
+        map_#REGION#.setZoom(#MARKERZOOM#);
+      }
+      if (marker_#REGION#) {
+        marker_#REGION#.setMap(map_#REGION#);
+        marker_#REGION#.setPosition(pos);
+      } else {
+        marker_#REGION# = new google.maps.Marker({map: map_#REGION#, position: pos, icon: "#ICON#"});
+      }
     }
   } else if (marker_#REGION#) {
     marker_#REGION#.setMap(null);
