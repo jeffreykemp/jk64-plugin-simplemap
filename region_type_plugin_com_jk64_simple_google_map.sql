@@ -32,8 +32,7 @@ wwv_flow_api.create_plugin(
 ,p_plugin_type=>'REGION TYPE'
 ,p_name=>'COM.JK64.SIMPLE_GOOGLE_MAP'
 ,p_display_name=>'JK64 Simple Google Map'
-,p_supported_ui_types=>'DESKTOP'
-,p_javascript_file_urls=>'https://maps.googleapis.com/maps/api/js'
+,p_supported_ui_types=>'DESKTOP:JQM_SMARTPHONE'
 ,p_plsql_code=>wwv_flow_utilities.join(wwv_flow_t_varchar2(
 'function render_map (',
 '    p_region in apex_plugin.t_region,',
@@ -46,6 +45,12 @@ wwv_flow_api.create_plugin(
 '    -- Variables',
 '    l_result apex_plugin.t_region_render_result;',
 '    l_html varchar2(32767);',
+'    l_lat NUMBER;',
+'    l_lng NUMBER;',
+'    l_js_params varchar2(1000);',
+'',
+'    -- Plugin attributes (application level)',
+'    l_api_key       plugin_attr := p_plugin.attribute_01;',
 '',
 '    -- Component attributes',
 '    l_latlong       plugin_attr := p_region.attribute_01;',
@@ -54,8 +59,10 @@ wwv_flow_api.create_plugin(
 '    l_item_name     plugin_attr := p_region.attribute_04;',
 '    l_marker_zoom   plugin_attr := p_region.attribute_05;',
 '    l_icon          plugin_attr := p_region.attribute_06;',
-'    l_lat NUMBER;',
-'    l_lng NUMBER;',
+'    l_sign_in       plugin_attr := p_region.attribute_07;',
+'    l_geocode_item  plugin_attr := p_region.attribute_08;',
+'    l_country       plugin_attr := p_region.attribute_09;',
+'    ',
 'begin',
 '    -- debug information will be included',
 '    if apex_application.g_debug then',
@@ -64,86 +71,126 @@ wwv_flow_api.create_plugin(
 '            p_region => p_region,',
 '            p_is_printer_friendly => p_is_printer_friendly);',
 '    end if;',
+'',
+'    IF l_api_key IS NOT NULL THEN',
+'        l_js_params := ''?key='' || l_api_key;',
+'        IF l_sign_in = ''Y'' THEN',
+'            l_js_params := l_js_params || ''&''||''signed_in=true'';',
+'        END IF;',
+'    END IF;',
+'',
+'    APEX_JAVASCRIPT.add_library',
+'      (p_name           => ''js'' || l_js_params',
+'      ,p_directory      => ''https://maps.googleapis.com/maps/api/''',
+'      ,p_version        => null',
+'      ,p_skip_extension => true);',
 '    ',
 '    l_lat := TO_NUMBER(SUBSTR(l_latlong,1,INSTR(l_latlong,'','')-1));',
 '    l_lng := TO_NUMBER(SUBSTR(l_latlong,INSTR(l_latlong,'','')+1));',
 '    ',
 '    l_html := q''[',
 '<script>',
-'var map, marker;',
-'function setMarker(map,lat,lng) {',
+'var map_#REGION#, marker_#REGION#;',
+'function r_#REGION#(f){/in/.test(document.readyState)?setTimeout("r_#REGION#("+f+")",9):f()}',
+'function geocode_#REGION#(geocoder) {',
+'  var address = $v("#GEOCODEITEM#");',
+'  geocoder.geocode({"address": address#COUNTRY_RESTRICT#}',
+'  , function(results, status) {',
+'    if (status === google.maps.GeocoderStatus.OK) {',
+'      var pos = results[0].geometry.location;',
+'      console.log("#REGION# geocode ok");',
+'      map_#REGION#.setCenter(pos);',
+'      map_#REGION#.panTo(pos);',
+'      if ("#MARKERZOOM#" != "") {',
+'        map_#REGION#.setZoom(#MARKERZOOM#);',
+'      }',
+'      setMarker_#REGION#(pos.lat(), pos.lng())',
+'    } else {',
+'      console.log("#REGION# geocode was unsuccessful for the following reason: "+status);',
+'    }',
+'  });',
+'}',
+'function setMarker_#REGION#(lat,lng) {',
 '  if (lat !== null && lng !== null) {',
 '    var pos = new google.maps.LatLng(lat,lng);',
-'    map.panTo(pos);',
+'    map_#REGION#.panTo(pos);',
 '    if ("#MARKERZOOM#" != "") {',
-'      map.setZoom(#MARKERZOOM#);',
+'      map_#REGION#.setZoom(#MARKERZOOM#);',
 '    }',
-'    if (marker) {',
-'      marker.setMap(map);',
-'      marker.setPosition(pos);',
+'    if (marker_#REGION#) {',
+'      marker_#REGION#.setMap(map_#REGION#);',
+'      marker_#REGION#.setPosition(pos);',
 '    } else {',
-'      marker = new google.maps.Marker({map: map, position: pos, icon: "#ICON#"});',
+'      marker_#REGION# = new google.maps.Marker({map: map_#REGION#, position: pos, icon: "#ICON#"});',
 '    }',
-'  } else if (marker) {',
-'    marker.setMap(null);',
+'  } else if (marker_#REGION#) {',
+'    marker_#REGION#.setMap(null);',
 '  }',
 '}',
-'function initMap() {',
-'  var itemname = "#ITEM#"',
-'     ,lat = #LAT#',
-'     ,lng = #LNG#',
-'  var latlng = new google.maps.LatLng(lat,lng);',
+'function initMap_#REGION#() {',
 '  var myOptions = {',
 '    zoom: #ZOOM#,',
-'    center: latlng,',
+'    center: new google.maps.LatLng(#LAT#,#LNG#),',
 '    mapTypeId: google.maps.MapTypeId.ROADMAP',
 '  };',
-'  map = new google.maps.Map(document.getElementById("#REGION_ID#_map"),myOptions);',
-'  if (itemname !== "") {',
-'    var val = $v(itemname);',
+'  map_#REGION# = new google.maps.Map(document.getElementById("map_#REGION#_container"),myOptions);',
+'  if ("#ITEM#" !== "") {',
+'    var val = $v("#ITEM#");',
 '    if (val !== null && val.indexOf(",") > -1) {',
 '      var arr = val.split(",");',
-'      setMarker(map,arr[0],arr[1]);',
+'      setMarker_#REGION#(arr[0],arr[1]);',
 '    }',
-'    $("#"+itemname).change(function(){ ',
+'    $("##ITEM#").change(function(){ ',
 '      var latlng = this.value;',
 '      if (latlng !== null && latlng !== undefined && latlng.indexOf(",") > -1) {',
 '        var arr = latlng.split(",");',
-'        setMarker(map,arr[0],arr[1]);',
+'        setMarker_#REGION#(arr[0],arr[1]);',
 '      }    ',
 '    });',
 '  }',
-'  google.maps.event.addListener(map, ''click'', function (event) {',
+'  google.maps.event.addListener(map_#REGION#, "click", function (event) {',
 '    var lat = event.latLng.lat()',
 '       ,lng = event.latLng.lng();',
-'    setMarker(map,lat,lng);',
+'    setMarker_#REGION#(lat,lng);',
 '    if ("#ITEM#" !== "") {',
 '      $s("#ITEM#",lat+","+lng);',
 '    }',
-'    apex.jQuery("##REGION_ID#").trigger("mapclick", {lat:lat, lng:lng});',
+'    apex.jQuery("##REGION#").trigger("mapclick", {map:map_#REGION#, lat:lat, lng:lng});',
 '  });',
+'  if ("#GEOCODEITEM#" != "") {',
+'    var geocoder = new google.maps.Geocoder();',
+'    $("##GEOCODEITEM#").change(function(){',
+'      geocode_#REGION#(geocoder);',
+'    });',
+'  }',
+'  apex.jQuery("##REGION#").trigger("maploaded", {map:map_#REGION#});',
 '}',
-'window.onload = function() {',
-'  initMap();',
-'}',
+'r_#REGION#(function(){',
+'  initMap_#REGION#();',
+'});',
 '</script>',
-'<div id="#REGION_ID#_map" style="min-height:#HEIGHT#px"></div>',
+'<div id="map_#REGION#_container" style="min-height:#HEIGHT#px"></div>',
 ']'';',
 '  ',
-'  l_html := REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(',
+'  l_html := REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(',
+'            REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(',
 '    l_html',
-'    ,''#LAT#'',          l_lat)',
-'    ,''#LNG#'',          l_lng)',
-'    ,''#ZOOM#'',         l_zoom)',
-'    ,''#HEIGHT#'',       l_region_height)',
-'    ,''#ITEM#'',         l_item_name)',
-'    ,''#MARKERZOOM#'',   l_marker_zoom)',
-'    ,''#ICON#'',         l_icon)',
-'    ,''#REGION_ID#'',    CASE',
-'                       WHEN p_region.static_id IS NOT NULL',
-'                       THEN p_region.static_id',
-'                       ELSE ''R''||p_region.id',
-'                       END);',
+'    ,''#LAT#'',              TO_CHAR(l_lat,''fm999.9999999999999999''))',
+'    ,''#LNG#'',              TO_CHAR(l_lng,''fm999.9999999999999999''))',
+'    ,''#ZOOM#'',             l_zoom)',
+'    ,''#HEIGHT#'',           l_region_height)',
+'    ,''#ITEM#'',             l_item_name)',
+'    ,''#MARKERZOOM#'',       l_marker_zoom)',
+'    ,''#ICON#'',             l_icon)',
+'    ,''#REGION#'',           CASE',
+'                           WHEN p_region.static_id IS NOT NULL',
+'                           THEN p_region.static_id',
+'                           ELSE ''R''||p_region.id',
+'                           END)',
+'    ,''#GEOCODEITEM#'',      l_geocode_item)',
+'    ,''#COUNTRY_RESTRICT#'', CASE WHEN l_country IS NOT NULL',
+'                           THEN '',componentRestrictions:{country:"''||l_country||''"}''',
+'                           END);',
 '    ',
 '  sys.htp.p(l_html);',
 '',
@@ -161,6 +208,18 @@ wwv_flow_api.create_plugin(
 'To set the Marker position at runtime call <code>setMarker(lat,lng)</code> with the desired latitude and longitude. Note that calling setMarker will NOT fire the "mapClick" event.'))
 ,p_version_identifier=>'0.2'
 ,p_about_url=>'https://github.com/jeffreykemp/jk64-plugin-simplemap'
+);
+wwv_flow_api.create_plugin_attribute(
+ p_id=>wwv_flow_api.id(75150675458186518)
+,p_plugin_id=>wwv_flow_api.id(65986014849483781)
+,p_attribute_scope=>'APPLICATION'
+,p_attribute_sequence=>1
+,p_display_sequence=>10
+,p_prompt=>'Google API Key'
+,p_attribute_type=>'TEXT'
+,p_is_required=>false
+,p_is_translatable=>false
+,p_help_text=>'Optional. If you don''t set this, you may get a "Google Maps API warning: NoApiKeys" warning in the console log. Refer: https://developers.google.com/maps/documentation/javascript/get-api-key#get-an-api-key'
 );
 wwv_flow_api.create_plugin_attribute(
  p_id=>wwv_flow_api.id(66016458240245999)
@@ -265,11 +324,61 @@ wwv_flow_api.create_plugin_attribute(
 'http://maps.google.com/mapfiles/ms/icons/red-pushpin.png'))
 ,p_help_text=>'URL to the icon to show for the marker. Leave blank for the default red Google pin.'
 );
+wwv_flow_api.create_plugin_attribute(
+ p_id=>wwv_flow_api.id(75151750836192765)
+,p_plugin_id=>wwv_flow_api.id(65986014849483781)
+,p_attribute_scope=>'COMPONENT'
+,p_attribute_sequence=>7
+,p_display_sequence=>70
+,p_prompt=>'Enable Google Sign-In'
+,p_attribute_type=>'CHECKBOX'
+,p_is_required=>false
+,p_default_value=>'N'
+,p_is_translatable=>false
+,p_help_text=>'Set to Yes to enable Google sign-in on the map. Only works if you set the Google API Key.'
+);
+wwv_flow_api.create_plugin_attribute(
+ p_id=>wwv_flow_api.id(75154147036280094)
+,p_plugin_id=>wwv_flow_api.id(65986014849483781)
+,p_attribute_scope=>'COMPONENT'
+,p_attribute_sequence=>8
+,p_display_sequence=>80
+,p_prompt=>'Geocode Item'
+,p_attribute_type=>'PAGE ITEM'
+,p_is_required=>false
+,p_is_translatable=>false
+,p_help_text=>'Set to a text item on the page. If the text item contains the name of a location or an address, a Google Maps Geocode search will be done and, if found, the map will be moved to that location and a pin shown. NOTE: requires a Google API key to be set'
+||' at the application level.'
+);
+wwv_flow_api.create_plugin_attribute(
+ p_id=>wwv_flow_api.id(75154903326283475)
+,p_plugin_id=>wwv_flow_api.id(65986014849483781)
+,p_attribute_scope=>'COMPONENT'
+,p_attribute_sequence=>9
+,p_display_sequence=>90
+,p_prompt=>'Restrict to Country code'
+,p_attribute_type=>'TEXT'
+,p_is_required=>false
+,p_display_length=>10
+,p_max_length=>2
+,p_is_translatable=>false
+,p_depending_on_attribute_id=>wwv_flow_api.id(75154147036280094)
+,p_depending_on_condition_type=>'NOT_NULL'
+,p_text_case=>'UPPER'
+,p_examples=>'AU'
+,p_help_text=>'Leave blank to allow geocoding to find any place on earth. Set to country code (see https://developers.google.com/public-data/docs/canonical/countries_csv for valid values) to restrict geocoder to that country.'
+);
 wwv_flow_api.create_plugin_event(
  p_id=>wwv_flow_api.id(65999677618912872)
 ,p_plugin_id=>wwv_flow_api.id(65986014849483781)
 ,p_name=>'mapclick'
 ,p_display_name=>'mapClick'
+);
+wwv_flow_api.create_plugin_event(
+ p_id=>wwv_flow_api.id(75152687385195635)
+,p_plugin_id=>wwv_flow_api.id(65986014849483781)
+,p_name=>'maploaded'
+,p_display_name=>'mapLoaded'
 );
 end;
 /
