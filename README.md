@@ -15,3 +15,7 @@ The user can click the map to set a single Marker. You can have the region synch
 1. Upload the plugin to your application
 2. Add a region to the page, select type JK64 Simple Google Map [plugin]
 3. (optional) Set the map Attributes to set the initial position and zoom level, and/or synchronize the map with an item on your page.
+
+**Need more features?**
+
+Try the more fully-featured [JK64 Report Map plugin](https://github.com/jeffreykemp/jk64-plugin-reportmap) which has many more features, including the ability to take a SQL Query and render each record on the map.
