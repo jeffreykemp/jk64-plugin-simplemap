@@ -20,3 +20,4 @@ The user can click the map to set a single Marker. You can have the region synch
 **Need more features?**
 
 Try the [JK64 Report Map plugin](https://github.com/jeffreykemp/jk64-plugin-reportmap) which has many more features, including the ability to take a SQL Query and render each record on the map.
+
