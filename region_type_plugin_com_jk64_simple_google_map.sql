@@ -125,13 +125,8 @@ wwv_flow_api.create_plugin(
 ,p_render_function=>'render_map'
 ,p_substitute_attributes=>true
 ,p_subscribe_plugin_settings=>true
-,p_help_text=>wwv_flow_utilities.join(wwv_flow_t_varchar2(
-'Add a region of this type to your page and you have a map which the user can click to set a single Marker.',
-'<BR>',
-'To get the Latitude and Longitude of the Marker, add a Dynamic Action on the region responding to the "mapClick" event. In your javascript action for the DA, you can get the Latitude and Longitude via this.data.lat and this.data.lng, e.g.: <code>$s("'
-||'P1_MY_ITEM", "You clicked at: " + this.data.lat + "," + this.data.lng);</code>. You can also manipulate the map, e.g. map.setZoom(4) to zoom in on the chosen location.',
-'<BR>',
-'To set the Marker position at runtime call <code>setMarker(lat,lng)</code> with the desired latitude and longitude. Note that calling setMarker will NOT fire the "mapClick" event.'))
+,p_help_text=>'Add a region of this type to your page and you have a map which the user can click to set a single Marker. If you set Synchronize with Item it will copy the lat,lng that the user clicks into that item; also, if the item is changed the map will move t'
+||'he marker to the new location.'
 ,p_version_identifier=>'0.2'
 ,p_about_url=>'https://github.com/jeffreykemp/jk64-plugin-simplemap'
 ,p_files_version=>3
