@@ -12,9 +12,10 @@ The user can click the map to set a single Marker. You can have the region synch
 
 ## INSTALLATION INSTRUCTIONS ##
 
-1. Upload the plugin to your application
-2. (optional) Supply your Google API Key (NOTE: the plugin is usable without one)
-3. Add a region to the page, select type JK64 Simple Google Map [plugin]
+1. Download the [latest release](https://github.com/jeffreykemp/jk64-plugin-simplemap/releases/latest)
+2. Install the plugin to your application - **region_type_plugin_com_jk64_simple_google_map.sql**
+3. *(optional)* Supply your Google API Key (NOTE: the plugin is usable without one)
+4. Add a region to the page, select type JK64 Simple Google Map [plugin]
 
 **Need more features?**
 
