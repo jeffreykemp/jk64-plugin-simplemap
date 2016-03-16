@@ -13,8 +13,8 @@ The user can click the map to set a single Marker. You can have the region synch
 ## INSTALLATION INSTRUCTIONS ##
 
 1. Upload the plugin to your application
-2. Add a region to the page, select type JK64 Simple Google Map [plugin]
-3. (optional) Set the map Attributes to set the initial position and zoom level, and/or synchronize the map with an item on your page.
+2. (optional) Supply your Google API Key (NOTE: the plugin is usable without one)
+3. Add a region to the page, select type JK64 Simple Google Map [plugin]
 
 **Need more features?**
 
