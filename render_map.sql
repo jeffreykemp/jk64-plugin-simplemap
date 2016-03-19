@@ -27,6 +27,8 @@ as
     l_sign_in       plugin_attr := p_region.attribute_07;
     l_geocode_item  plugin_attr := p_region.attribute_08;
     l_country       plugin_attr := p_region.attribute_09;
+    l_mapstyle      plugin_attr := p_region.attribute_10;
+    l_address_item  plugin_attr := p_region.attribute_11;
     
 begin
     -- debug information will be included
@@ -42,6 +44,12 @@ begin
         IF l_sign_in = 'Y' THEN
             l_js_params := l_js_params||'&'||'signed_in=true';
         END IF;
+    ELSE
+        -- these features require a Google API Key
+        l_sign_in      := 'N';
+        l_geocode_item := NULL;
+        l_country      := NULL;
+        l_address_item := NULL;
     END IF;
 
     APEX_JAVASCRIPT.add_library
@@ -73,7 +81,10 @@ var opt_#REGION# = {
   ,icon:       "'||l_icon||'"
   ,syncItem:   "'||l_item_name||'"
   ,geocodeItem:"'||l_geocode_item||'"
-  ,country:    "'||l_country||'"
+  ,country:    "'||l_country||'"'||
+  CASE WHEN l_mapstyle IS NOT NULL THEN '
+  ,mapstyle:       '||l_mapstyle END || '
+  ,addressItem:"'||l_address_item||'"
 };
 function r_#REGION#(f){/in/.test(document.readyState)?setTimeout("r_#REGION#("+f+")",9):f()}
 r_#REGION#(function(){
