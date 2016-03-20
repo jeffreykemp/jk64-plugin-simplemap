@@ -10,7 +10,7 @@ If you set a Google API Key, you gain access to additional features, including a
 
 ## DEMO ##
 
-[https://apex.oracle.com/pls/apex/f?p=JK64_SIMPLE_MAP](https://apex.oracle.com/pls/apex/f?p=JK64_SIMPLE_MAP)
+[https://apex.oracle.com/pls/apex/f?p=JK64_SIMPLE_MAP](https://apex.oracle.com/pls/apex/f?p=JK64_SIMPLE_MAP&c=JK64)
 
 ## INSTALLATION INSTRUCTIONS ##
 
