@@ -45,11 +45,16 @@ function jk64plugin_getAddress(opt,lat,lng) {
 	var latlng = {lat: lat, lng: lng};
 	opt.geocoder.geocode({'location': latlng}, function(results, status) {
 		if (status === google.maps.GeocoderStatus.OK) {
+			for (i=0; i<results.length; i++) {
+				apex.debug(opt.regionId+" result["+i+"]="+results[i].formatted_address+" ("+results[i].types.join()+")");
+			}
 			if (results[1]) {
 				$s(opt.addressItem,results[0].formatted_address);
 			} else {
-				window.alert('No results found');
+				window.alert('Insufficient results found');
 			}
+		} else if (status === google.maps.GeocoderStatus.ZERO_RESULTS) {
+			window.alert("No results found");
 		} else {
 			window.alert('Geocoder failed due to: ' + status);
 		}
@@ -100,6 +105,24 @@ function jk64plugin_initMap(opt) {
 		$("#"+opt.geocodeItem).change(function(){
 			jk64plugin_geocode(opt,geocoder);
 		});
+	}
+	if (opt.geolocate) {
+		if (navigator.geolocation) {
+			apex.debug(opt.regionId+" geolocate");
+			navigator.geolocation.getCurrentPosition(function(position) {
+				var pos = {
+					lat: position.coords.latitude,
+					lng: position.coords.longitude
+				};
+				opt.map.panTo(pos);
+				if (opt.geolocateZoom) {
+				  opt.map.setZoom(opt.geolocateZoom);
+				}
+				apex.jQuery("#"+opt.regionId).trigger("geolocate", {map:opt.map, lat:pos.lat, lng:pos.lng});
+			});
+		} else {
+			apex.debug(opt.regionId+" browser does not support geolocation");
+		}
 	}
 	apex.jQuery("#"+opt.regionId).trigger("maploaded", {map:opt.map});
 }

@@ -29,6 +29,8 @@ as
     l_country       plugin_attr := p_region.attribute_09;
     l_mapstyle      plugin_attr := p_region.attribute_10;
     l_address_item  plugin_attr := p_region.attribute_11;
+    l_geolocate     plugin_attr := p_region.attribute_12;
+    l_geoloc_zoom   plugin_attr := p_region.attribute_13;
     
 begin
     -- debug information will be included
@@ -72,24 +74,34 @@ begin
     
     l_script := REPLACE('
 var opt_#REGION# = {
-   container:  "map_#REGION#_container"
-  ,regionId:   "#REGION#"
-  ,initZoom:   '||l_zoom||'
-  ,initLat:    '||TO_CHAR(l_lat,'fm999.9999999999999999')||'
-  ,initLng:    '||TO_CHAR(l_lng,'fm999.9999999999999999')||'
+   container: "map_#REGION#_container"
+  ,regionId: "#REGION#"
+  ,initZoom: '||l_zoom||'
+  ,initLat: '||TO_CHAR(l_lat,'fm999.9999999999999999')||'
+  ,initLng: '||TO_CHAR(l_lng,'fm999.9999999999999999')||'
   ,markerZoom: '||l_marker_zoom||'
-  ,icon:       "'||l_icon||'"
-  ,syncItem:   "'||l_item_name||'"
-  ,geocodeItem:"'||l_geocode_item||'"
-  ,country:    "'||l_country||'"'||
+  ,icon: "'||l_icon||'"
+  ,syncItem: "'||l_item_name||'"
+  ,geocodeItem: "'||l_geocode_item||'"
+  ,country: "'||l_country||'"'||
   CASE WHEN l_mapstyle IS NOT NULL THEN '
-  ,mapstyle:       '||l_mapstyle END || '
-  ,addressItem:"'||l_address_item||'"
+  ,mapstyle: '||l_mapstyle
+  END || '
+  ,addressItem: "'||l_address_item||'"'||
+  CASE WHEN l_geolocate = 'Y' THEN '
+  ,geolocate: true' ||
+    CASE WHEN l_geoloc_zoom IS NOT NULL THEN '
+  ,geolocateZoom: '||l_geoloc_zoom
+    END
+  END || '
 };
 function r_#REGION#(f){/in/.test(document.readyState)?setTimeout("r_#REGION#("+f+")",9):f()}
 r_#REGION#(function(){
   jk64plugin_initMap(opt_#REGION#);
 });
+function click_#REGION#(lat,lng) {
+  jk64plugin_setMarker(opt_#REGION#,lat,lng);
+}
 ','#REGION#',l_region);
 
   sys.htp.p('<script>'||l_script||'</script>');
