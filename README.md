@@ -2,7 +2,7 @@
 
 This allows you to add a Google Map region to any page.
 
-![plugin-simplemap-preview.png](https://raw.githubusercontent.com/jeffreykemp/jk64-plugin-simplemap/master/plugin-simplemap-preview.png)
+![plugin-simplemap-preview.png](https://raw.githubusercontent.com/jeffreykemp/jk64-plugin-simplemap/master/src/plugin-simplemap-preview.png)
 
 The user can click the map to set a single Marker. You can have the region synchronize the map with an item you nominate - if so, the position where the user clicks will be written to the item as a lat,long pair of coordinates. If the item is loaded with some coordinators, or changed by the user, the map marker will be moved to the indicated position.
 
