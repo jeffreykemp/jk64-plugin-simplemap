@@ -14,6 +14,10 @@ If you set a Google API Key, you gain access to additional features, including a
 
 [https://apex.oracle.com/pls/apex/f?p=JK64_SIMPLE_MAP](https://apex.oracle.com/pls/apex/f?p=JK64_SIMPLE_MAP&c=JK64)
 
+## PRE-REQUISITES ##
+
+* [Oracle Application Express 5.0.2](https://apex.oracle.com)
+
 ## INSTALLATION INSTRUCTIONS ##
 
 1. Download the [latest release](https://github.com/jeffreykemp/jk64-plugin-simplemap/releases/latest)
