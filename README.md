@@ -1,4 +1,6 @@
-# Simple Google Map region plugin for Oracle Application Express. #
+# Simple Map (Google Map) #
+
+**A Region plugin for Oracle Application Express**
 
 This allows you to add a Google Map region to any page.
 
