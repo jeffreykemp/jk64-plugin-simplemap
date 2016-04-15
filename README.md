@@ -25,6 +25,8 @@ If you set a Google API Key, you gain access to additional features, including a
 3. *(optional)* Supply your **Google API Key** (NOTE: the plugin is usable without one)
 4. Add a region to the page, select type **JK64 Simple Google Map [Plug-In]**
 
+For more information refer to the [WIKI](https://github.com/jeffreykemp/jk64-plugin-simplemap/wiki).
+
 **Need more features?**
 
 Try the [JK64 Report Map plugin](https://github.com/jeffreykemp/jk64-plugin-reportmap) which has many more features, including the ability to take a SQL Query and render each record on the map.
