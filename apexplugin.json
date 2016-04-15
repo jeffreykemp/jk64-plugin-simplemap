@@ -1,6 +1,6 @@
 {
   "name" : "jk64SimpleMap",
-  "version" : "0.3",
+  "version" : "0.4",
   "description" : "Simple Google Map region plugin",
   "keywords" : ["map"],
   "homepage" : "https://github.com/jeffreykemp/jk64-plugin-simplemap",
