@@ -13,6 +13,7 @@ as
     l_js_params varchar2(1000);
     l_lat       number;
     l_lng       number;
+    l_readonly  varchar2(1000) := 'false';
 
     -- Plugin attributes (application level)
     l_api_key       plugin_attr := p_plugin.attribute_01;
@@ -31,48 +32,56 @@ as
     l_address_item  plugin_attr := p_region.attribute_11;
     l_geolocate     plugin_attr := p_region.attribute_12;
     l_geoloc_zoom   plugin_attr := p_region.attribute_13;
+    l_readonly_expr plugin_attr := p_region.attribute_14;
     
 begin
-    -- debug information will be included
-    if apex_application.g_debug then
-        apex_plugin_util.debug_region (
-            p_plugin => p_plugin,
-            p_region => p_region,
-            p_is_printer_friendly => p_is_printer_friendly);
-    end if;
+    apex_plugin_util.debug_region (
+        p_plugin => p_plugin,
+        p_region => p_region,
+        p_is_printer_friendly => p_is_printer_friendly);
 
-    IF l_api_key IS NOT NULL THEN
+    if l_api_key is not null then
         l_js_params := '?key=' || l_api_key;
-        IF l_sign_in = 'Y' THEN
+        if l_sign_in = 'Y' then
             l_js_params := l_js_params||'&'||'signed_in=true';
-        END IF;
-    ELSE
+        end if;
+    else
         -- these features require a Google API Key
         l_sign_in      := 'N';
-        l_geocode_item := NULL;
-        l_country      := NULL;
-        l_address_item := NULL;
-    END IF;
+        l_geocode_item := null;
+        l_country      := null;
+        l_address_item := null;
+    end if;
+    
+    if l_readonly_expr is not null then
+      l_readonly := apex_plugin_util.get_plsql_expression_result (
+        'case when (' || l_readonly_expr
+        || ') then ''true'' else ''false'' end');
+      if l_readonly not in ('true','false') then
+        raise_application_error(-20000, 'Read-only attribute must evaluate to true or false.');
+      end if;
+    end if;
 
-    APEX_JAVASCRIPT.add_library
-      (p_name           => 'js' || l_js_params
-      ,p_directory      => 'https://maps.googleapis.com/maps/api/'
-      ,p_skip_extension => true);
+    apex_javascript.add_library
+      (p_name                  => 'js' || l_js_params
+      ,p_directory             => 'https://maps.googleapis.com/maps/api/'
+      ,p_skip_extension        => true);
 
-    APEX_JAVASCRIPT.add_library
-      (p_name           => 'jk64plugin.min'
-      ,p_directory      => p_plugin.file_prefix);
+    apex_javascript.add_library
+      (p_name                  => 'simplemap'
+      ,p_directory             => p_plugin.file_prefix
+      ,p_check_to_add_minified => true);
     
-    l_lat := TO_NUMBER(SUBSTR(l_latlong,1,INSTR(l_latlong,',')-1));
-    l_lng := TO_NUMBER(SUBSTR(l_latlong,INSTR(l_latlong,',')+1));
+    l_lat := to_number(substr(l_latlong,1,instr(l_latlong,',')-1));
+    l_lng := to_number(substr(l_latlong,instr(l_latlong,',')+1));
     
-    l_region := CASE
-                WHEN p_region.static_id IS NOT NULL
-                THEN p_region.static_id
-                ELSE 'R'||p_region.id
-                END;
+    l_region := case
+                when p_region.static_id is not null
+                then p_region.static_id
+                else 'R'||p_region.id
+                end;
     
-    l_script := REPLACE('
+    l_script := replace('
 var opt_#REGION# = {
    container: "map_#REGION#_container"
   ,regionId: "#REGION#"
@@ -94,13 +103,14 @@ var opt_#REGION# = {
   ,geolocateZoom: '||l_geoloc_zoom
     END
   END || '
+  ,readonly: '||l_readonly||'
 };
 function r_#REGION#(f){/in/.test(document.readyState)?setTimeout("r_#REGION#("+f+")",9):f()}
 r_#REGION#(function(){
-  jk64plugin_initMap(opt_#REGION#);
+  simplemap.init(opt_#REGION#);
 });
 function click_#REGION#(lat,lng) {
-  jk64plugin_setMarker(opt_#REGION#,lat,lng);
+  simplemap.setMarker(opt_#REGION#,lat,lng);
 }
 ','#REGION#',l_region);
 
