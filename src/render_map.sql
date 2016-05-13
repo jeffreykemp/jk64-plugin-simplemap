@@ -85,10 +85,10 @@ begin
 var opt_#REGION# = {
    container: "map_#REGION#_container"
   ,regionId: "#REGION#"
-  ,initZoom: '||l_zoom||'
+  ,initZoom: '||nvl(l_zoom,'null')||'
   ,initLat: '||TO_CHAR(l_lat,'fm999.9999999999999999')||'
   ,initLng: '||TO_CHAR(l_lng,'fm999.9999999999999999')||'
-  ,markerZoom: '||l_marker_zoom||'
+  ,markerZoom: '||nvl(l_marker_zoom,'null')||'
   ,icon: "'||l_icon||'"
   ,syncItem: "'||l_item_name||'"
   ,geocodeItem: "'||l_geocode_item||'"
