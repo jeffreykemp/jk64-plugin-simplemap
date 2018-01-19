@@ -1,3 +1,4 @@
+-- JK64 Simple Google Map v0.5
 function render_map (
     p_region in apex_plugin.t_region,
     p_plugin in apex_plugin.t_plugin,

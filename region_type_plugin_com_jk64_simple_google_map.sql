@@ -13,7 +13,7 @@ whenever sqlerror exit sql.sqlcode rollback
 begin
 wwv_flow_api.import_begin (
  p_version_yyyy_mm_dd=>'2013.01.01'
-,p_release=>'5.0.2.00.07'
+,p_release=>'5.0.4.00.12'
 ,p_default_workspace_id=>20749515040658038
 ,p_default_application_id=>76577
 ,p_default_owner=>'SAMPLE'
@@ -34,6 +34,7 @@ wwv_flow_api.create_plugin(
 ,p_display_name=>'JK64 Simple Google Map'
 ,p_supported_ui_types=>'DESKTOP:JQM_SMARTPHONE'
 ,p_plsql_code=>wwv_flow_utilities.join(wwv_flow_t_varchar2(
+'-- JK64 Simple Google Map v0.5',
 'function render_map (',
 '    p_region in apex_plugin.t_region,',
 '    p_plugin in apex_plugin.t_plugin,',
@@ -160,7 +161,7 @@ wwv_flow_api.create_plugin(
 ,p_subscribe_plugin_settings=>true
 ,p_help_text=>'Add a region of this type to your page and you have a map which the user can click to set a single Marker. If you set Synchronize with Item it will copy the lat,lng that the user clicks into that item; also, if the item is changed the map will move t'
 ||'he marker to the new location. If you set an Address item and your Google API Key, it will do a reverse geocode and put the first address result into it.'
-,p_version_identifier=>'0.4'
+,p_version_identifier=>'0.5'
 ,p_about_url=>'https://github.com/jeffreykemp/jk64-plugin-simplemap'
 ,p_files_version=>18
 );
@@ -188,7 +189,6 @@ wwv_flow_api.create_plugin_attribute(
 ,p_default_value=>'0,0'
 ,p_max_length=>100
 ,p_unit=>'lat,long'
-,p_supported_ui_types=>'DESKTOP'
 ,p_is_translatable=>false
 ,p_help_text=>'Set the latitude and longitude as a pair of numbers to be used to position the map on page load, if no pin coordinates have been provided by the page item.'
 );
@@ -204,7 +204,6 @@ wwv_flow_api.create_plugin_attribute(
 ,p_default_value=>'1'
 ,p_max_length=>2
 ,p_unit=>'(0-23)'
-,p_supported_ui_types=>'DESKTOP'
 ,p_is_translatable=>false
 ,p_help_text=>'Set the initial map zoom level on page load, to be used if the page item has no coordinates to show.'
 );
@@ -220,7 +219,6 @@ wwv_flow_api.create_plugin_attribute(
 ,p_default_value=>'400'
 ,p_max_length=>5
 ,p_unit=>'pixels'
-,p_supported_ui_types=>'DESKTOP'
 ,p_is_translatable=>false
 ,p_help_text=>'Set the desired height for the map region. Note: the map width will adjust to the maximum available space.'
 );
@@ -233,7 +231,6 @@ wwv_flow_api.create_plugin_attribute(
 ,p_prompt=>'Synchronize with Item'
 ,p_attribute_type=>'PAGE ITEM'
 ,p_is_required=>false
-,p_supported_ui_types=>'DESKTOP'
 ,p_is_translatable=>false
 ,p_help_text=>'Position of the marker will be retrieved from and stored in this item as a Lat,Long value.'
 );
@@ -245,10 +242,9 @@ wwv_flow_api.create_plugin_attribute(
 ,p_display_sequence=>50
 ,p_prompt=>'Marker Zoom Level'
 ,p_attribute_type=>'INTEGER'
-,p_is_required=>false
+,p_is_required=>true
 ,p_default_value=>'16'
 ,p_unit=>'(0-23)'
-,p_supported_ui_types=>'DESKTOP'
 ,p_is_translatable=>false
 ,p_help_text=>'If a marker is set or moved, zoom the map to this level. Leave blank to make the map not zoom when the marker is moved.'
 );
@@ -262,7 +258,6 @@ wwv_flow_api.create_plugin_attribute(
 ,p_attribute_type=>'TEXT'
 ,p_is_required=>false
 ,p_max_length=>4000
-,p_supported_ui_types=>'DESKTOP'
 ,p_is_translatable=>false
 ,p_examples=>wwv_flow_utilities.join(wwv_flow_t_varchar2(
 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png',
