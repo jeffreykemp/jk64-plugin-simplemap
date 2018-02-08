@@ -1,4 +1,5 @@
 var simplemap = {
+// JK64 Simple Google Map v0.6
 
 geocode : function (opt,geocoder) {
   apex.debug("simplemap.geocode");
@@ -55,6 +56,11 @@ getAddress : function (opt,lat,lng) {
 			}
 			if (results[1]) {
 				$s(opt.addressItem,results[0].formatted_address);
+        var components = results[0].address_components;
+        for (i=0; i<components.length; i++) {
+          apex.debug(opt.regionId+" result[0] "+components[i].types+"="+components[i].short_name+" ("+components[i].long_name+")");
+        }
+        apex.jQuery("#"+opt.regionId).trigger("address", {map:opt.map, result:results[0]});
 			} else {
 				window.alert('Insufficient results found');
 			}
@@ -81,10 +87,19 @@ init : function (opt) {
     //disable zoom/pan if readonly
     opt.map.setOptions({
        disableDefaultUI: true
-      ,draggable: false
-      ,zoomControl: false
-      ,scrollwheel: false
-      ,disableDoubleClickZoom: true
+      ,draggable: opt.pan
+      ,zoomControl: opt.zoom
+      ,scrollwheel: opt.zoom
+      ,disableDoubleClickZoom: !(opt.zoom)
+      ,gestureHandling: opt.gestureHandling
+    });
+  } else {
+    opt.map.setOptions({
+       draggable: opt.pan
+      ,zoomControl: opt.zoom
+      ,scrollwheel: opt.zoom
+      ,disableDoubleClickZoom: !(opt.zoom)
+      ,gestureHandling: opt.gestureHandling
     });
   }
 	if (opt.syncItem!=="") {
