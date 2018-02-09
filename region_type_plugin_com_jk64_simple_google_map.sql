@@ -481,6 +481,8 @@ wwv_flow_api.create_plugin_attribute(
 ,p_default_value=>'auto'
 ,p_is_translatable=>false
 ,p_lov_type=>'STATIC'
+,p_help_text=>'This attribute allows you to select how the map responds to touch gestures on a mobile device. Mobile web users often get frustrated when trying to scroll the page, but an embedded map captures their swipe and pans the map instead. This can even lead'
+||' to users getting stuck on the map and having to reload the page in order to get back to the rest of the page. This option allows you to make scrolling more intuitive and less frustrating map interaction experience on mobile browsers.'
 );
 wwv_flow_api.create_plugin_attr_value(
  p_id=>wwv_flow_api.id(136493840498930472)
