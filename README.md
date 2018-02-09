@@ -16,13 +16,13 @@ If you set a Google API Key, you gain access to additional features, including a
 
 ## PRE-REQUISITES ##
 
-* [Oracle Application Express 5.0.2](https://apex.oracle.com)
+* [Oracle Application Express 5.0.2](https://apex.oracle.com) or later
 
 ## INSTALLATION INSTRUCTIONS ##
 
 1. Download the [latest release](https://github.com/jeffreykemp/jk64-plugin-simplemap/releases/latest)
 2. Install the plugin to your application - **region_type_plugin_com_jk64_simple_google_map.sql**
-3. *(optional)* Supply your **Google API Key** (NOTE: the plugin is usable without one)
+3. *(optional)* Supply your **Google API Key** (NOTE: the plugin is generally usable without one)
 4. Add a region to the page, select type **JK64 Simple Google Map [Plug-In]**
 
 For more information refer to the [WIKI](https://github.com/jeffreykemp/jk64-plugin-simplemap/wiki).
