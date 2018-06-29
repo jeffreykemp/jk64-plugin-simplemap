@@ -6,7 +6,7 @@ This allows you to add a Google Map region to any page.
 
 ![plugin-simplemap-preview.png](https://raw.githubusercontent.com/jeffreykemp/jk64-plugin-simplemap/master/src/plugin-simplemap-preview.png)
 
-The user can click the map to set a single Marker. You can have the region synchronize the map with an item you nominate - if so, the position where the user clicks will be written to the item as a lat,long pair of coordinates. If the item is loaded with some coordinators, or changed by the user, the map marker will be moved to the indicated position.
+The user can click the map to set a single Marker. You can have the region synchronize the map with an item you nominate - if so, the position where the user clicks will be written to the item as a lat,long pair of coordinates. If the item is loaded with some coordinates, or changed by the user, the map marker will be moved to the indicated position.
 
 If you set a Google API Key, you gain access to additional features, including a Search by Address (find a point by an entered address), and Reverse Geocode Search (find an address for a selected point).
 
