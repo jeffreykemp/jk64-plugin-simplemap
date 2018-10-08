@@ -54,7 +54,7 @@ getAddress : function (opt,lat,lng) {
 			for (i=0; i<results.length; i++) {
 				apex.debug(opt.regionId+" result["+i+"]="+results[i].formatted_address+" ("+results[i].types.join()+")");
 			}
-			if (results[1]) {
+			if (results[0]) {
 				$s(opt.addressItem,results[0].formatted_address);
         var components = results[0].address_components;
         for (i=0; i<components.length; i++) {
@@ -151,6 +151,12 @@ init : function (opt) {
 				if (opt.geolocateZoom) {
 				  opt.map.setZoom(opt.geolocateZoom);
 				}
+        if (opt.syncItem!=="") {
+          $s(opt.syncItem,pos.lat+","+pos.lng);
+        }
+        if (opt.addressItem!=="") {
+          simplemap.getAddress(opt,pos.lat,pos.lng);
+        }
 				apex.jQuery("#"+opt.regionId).trigger("geolocate", {map:opt.map, lat:pos.lat, lng:pos.lng});
 			});
 		} else {

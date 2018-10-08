@@ -27,7 +27,7 @@ prompt APPLICATION 76577 - Demo Simple Map Plugin
 -- Application Export:
 --   Application:     76577
 --   Name:            Demo Simple Map Plugin
---   Date and Time:   20:19 Friday February 9, 2018
+--   Date and Time:   19:40 Monday October 8, 2018
 --   Exported By:     JEFF
 --   Flashback:       0
 --   Export Type:     Application Export
@@ -36,12 +36,12 @@ prompt APPLICATION 76577 - Demo Simple Map Plugin
 --
 
 -- Application Statistics:
---   Pages:                      3
---     Items:                   13
+--   Pages:                      4
+--     Items:                   22
 --     Processes:                4
---     Regions:                  6
+--     Regions:                  8
 --     Buttons:                  1
---     Dynamic Actions:          3
+--     Dynamic Actions:          6
 --   Shared Components:
 --     Logic:
 --     Navigation:
@@ -65,7 +65,7 @@ prompt APPLICATION 76577 - Demo Simple Map Plugin
 --       Plug-ins:               1
 --     Globalization:
 --     Reports:
---   Supporting Objects:  Included
+--   Supporting Objects:  Excluded
 
 prompt --application/delete_application
 begin
@@ -107,7 +107,7 @@ wwv_flow_api.create_flow(
 ,p_rejoin_existing_sessions=>'N'
 ,p_csv_encoding=>'Y'
 ,p_last_updated_by=>'JEFF'
-,p_last_upd_yyyymmddhh24miss=>'20180209201913'
+,p_last_upd_yyyymmddhh24miss=>'20181008193734'
 ,p_file_prefix => nvl(wwv_flow_application_install.get_static_app_file_prefix,'')
 ,p_ui_type_name => null
 );
@@ -123,8 +123,9 @@ wwv_flow_api.create_list(
 wwv_flow_api.create_list_item(
  p_id=>wwv_flow_api.id(24993451313672461851)
 ,p_list_item_display_sequence=>10
-,p_list_item_link_text=>'Home'
-,p_list_item_link_target=>'f?p=&APP_ID.:1:&APP_SESSION.::&DEBUG.:'
+,p_list_item_link_text=>'Simple Map'
+,p_list_item_link_target=>'f?p=&APP_ID.:1:&SESSION.::&DEBUG.::::'
+,p_list_item_icon=>'fa-home'
 ,p_list_item_current_type=>'COLON_DELIMITED_PAGE_LIST'
 ,p_list_item_current_for_pages=>'1'
 );
@@ -132,9 +133,19 @@ wwv_flow_api.create_list_item(
  p_id=>wwv_flow_api.id(30097685516524071533)
 ,p_list_item_display_sequence=>20
 ,p_list_item_link_text=>'Marker Info'
-,p_list_item_link_target=>'f?p=&APP_ID.:2:&SESSION.::&DEBUG.'
+,p_list_item_link_target=>'f?p=&APP_ID.:2:&SESSION.::&DEBUG.::::'
+,p_list_item_icon=>'fa-map-marker'
 ,p_list_item_current_type=>'COLON_DELIMITED_PAGE_LIST'
 ,p_list_item_current_for_pages=>'2'
+);
+wwv_flow_api.create_list_item(
+ p_id=>wwv_flow_api.id(149994031128213819)
+,p_list_item_display_sequence=>30
+,p_list_item_link_text=>'Geolocate'
+,p_list_item_link_target=>'f?p=&APP_ID.:3:&SESSION.::&DEBUG.::::'
+,p_list_item_icon=>'fa-bolt'
+,p_list_item_current_type=>'COLON_DELIMITED_PAGE_LIST'
+,p_list_item_current_for_pages=>'3'
 );
 wwv_flow_api.create_list(
  p_id=>wwv_flow_api.id(24993449895363461841)
@@ -161,6 +172,7 @@ wwv_flow_api.create_plugin_setting(
  p_id=>wwv_flow_api.id(75504023794592469)
 ,p_plugin_type=>'REGION TYPE'
 ,p_plugin=>'PLUGIN_COM.JK64.SIMPLE_GOOGLE_MAP'
+,p_attribute_01=>'AIzaSyAjv4gBMm5HHYRVvPj-DIPKQtTr0-DVge0'
 );
 wwv_flow_api.create_plugin_setting(
  p_id=>wwv_flow_api.id(24993407215347461781)
@@ -7558,8 +7570,11 @@ wwv_flow_api.create_plugin(
 ,p_supported_ui_types=>'DESKTOP:JQM_SMARTPHONE'
 ,p_image_prefix => nvl(wwv_flow_application_install.get_static_plugin_file_prefix('REGION TYPE','COM.JK64.SIMPLE_GOOGLE_MAP'),'')
 ,p_plsql_code=>wwv_flow_utilities.join(wwv_flow_t_varchar2(
-'-- JK64 Simple Google Map v0.6',
-'function render_map (',
+'-- JK64 Simple Google Map v0.7',
+'',
+'g_tochar_format constant varchar2(100) := ''fm99999999999990.099999999999999999999999999999'';',
+'',
+'function render (',
 '    p_region in apex_plugin.t_region,',
 '    p_plugin in apex_plugin.t_plugin,',
 '    p_is_printer_friendly in boolean )',
@@ -7568,18 +7583,18 @@ wwv_flow_api.create_plugin(
 '    subtype plugin_attr is varchar2(32767);',
 '',
 '    -- Variables',
-'    l_result    apex_plugin.t_region_render_result;',
-'    l_script    varchar2(32767);',
-'    l_region    varchar2(100);',
-'    l_js_params varchar2(1000);',
-'    l_lat       number;',
-'    l_lng       number;',
-'    l_readonly  varchar2(1000) := ''false'';',
+'    l_result       apex_plugin.t_region_render_result;',
+'    l_script       varchar2(32767);',
+'    l_region       varchar2(100);',
+'    l_js_params    varchar2(1000);',
+'    l_lat          number;',
+'    l_lng          number;',
+'    l_readonly     varchar2(1000) := ''false'';',
 '    l_zoom_enabled varchar2(1000) := ''true'';',
 '    l_pan_enabled  varchar2(1000) := ''true'';',
 '',
 '    -- Plugin attributes (application level)',
-'    l_api_key       plugin_attr := p_plugin.attribute_01;',
+'    l_api_key          plugin_attr := p_plugin.attribute_01;',
 '',
 '    -- Component attributes',
 '    l_latlong          plugin_attr := p_region.attribute_01;',
@@ -7606,58 +7621,51 @@ wwv_flow_api.create_plugin(
 '        p_region => p_region,',
 '        p_is_printer_friendly => p_is_printer_friendly);',
 '',
-'    if l_api_key is not null then',
-'        l_js_params := ''?key='' || l_api_key;',
-'        if l_sign_in = ''Y'' then',
-'            l_js_params := l_js_params||''&''||''signed_in=true'';',
-'        end if;',
-'    else',
-'        -- these features require a Google API Key',
-'        l_sign_in      := ''N'';',
-'        l_geocode_item := null;',
-'        l_country      := null;',
-'        l_address_item := null;',
-'    end if;',
-'    ',
 '    if l_readonly_expr is not null then',
-'      l_readonly := apex_plugin_util.get_plsql_expression_result (',
-'        ''case when ('' || l_readonly_expr',
-'        || '') then ''''true'''' else ''''false'''' end'');',
-'      if l_readonly not in (''true'',''false'') then',
-'        raise_application_error(-20000, ''Read-only attribute must evaluate to true or false.'');',
-'      end if;',
+'        l_readonly := apex_plugin_util.get_plsql_expression_result (',
+'            ''case when ('' || l_readonly_expr',
+'            || '') then ''''true'''' else ''''false'''' end'');',
+'        if l_readonly not in (''true'',''false'') then',
+'            raise_application_error(-20000, ''Read-only attribute must evaluate to true or false.'');',
+'        end if;',
 '    end if;',
 '',
 '    if l_zoom_expr is not null then',
-'      l_zoom_enabled := apex_plugin_util.get_plsql_expression_result (',
-'        ''case when ('' || l_zoom_expr',
-'        || '') then ''''true'''' else ''''false'''' end'');',
-'      if l_zoom_enabled not in (''true'',''false'') then',
-'        raise_application_error(-20000, ''Zoom attribute must evaluate to true or false.'');',
-'      end if;',
+'        l_zoom_enabled := apex_plugin_util.get_plsql_expression_result (',
+'            ''case when ('' || l_zoom_expr',
+'            || '') then ''''true'''' else ''''false'''' end'');',
+'        if l_zoom_enabled not in (''true'',''false'') then',
+'            raise_application_error(-20000, ''Zoom attribute must evaluate to true or false.'');',
+'        end if;',
 '    end if;',
 '',
 '    if l_pan_expr is not null then',
-'      l_pan_enabled := apex_plugin_util.get_plsql_expression_result (',
-'        ''case when ('' || l_pan_expr',
-'        || '') then ''''true'''' else ''''false'''' end'');',
-'      if l_pan_enabled not in (''true'',''false'') then',
-'        raise_application_error(-20000, ''Pan attribute must evaluate to true or false.'');',
-'      end if;',
+'        l_pan_enabled := apex_plugin_util.get_plsql_expression_result (',
+'            ''case when ('' || l_pan_expr',
+'            || '') then ''''true'''' else ''''false'''' end'');',
+'        if l_pan_enabled not in (''true'',''false'') then',
+'            raise_application_error(-20000, ''Pan attribute must evaluate to true or false.'');',
+'        end if;',
 '    end if;',
 '',
+'    if l_sign_in = ''Y'' then',
+'        l_js_params := ''&''||''signed_in=true'';',
+'    end if;',
+'    ',
 '    apex_javascript.add_library',
-'      (p_name                  => ''js'' || l_js_params',
-'      ,p_directory             => ''https://maps.googleapis.com/maps/api/''',
-'      ,p_skip_extension        => true);',
+'        (p_name                  => ''js?key='' || l_api_key || l_js_params',
+'        ,p_directory             => ''https://maps.googleapis.com/maps/api/''',
+'        ,p_skip_extension        => true);',
 '',
 '    apex_javascript.add_library',
-'      (p_name                  => ''simplemap''',
-'      ,p_directory             => p_plugin.file_prefix',
-'      ,p_check_to_add_minified => true);',
+'        (p_name                  => ''simplemap''',
+'        ,p_directory             => p_plugin.file_prefix',
+'        ,p_check_to_add_minified => true);',
 '    ',
 '    l_lat := to_number(substr(l_latlong,1,instr(l_latlong,'','')-1));',
 '    l_lng := to_number(substr(l_latlong,instr(l_latlong,'','')+1));',
+'    ',
+'    l_gesture_handling := nvl(l_gesture_handling,''auto'');',
 '    ',
 '    l_region := case',
 '                when p_region.static_id is not null',
@@ -7665,56 +7673,53 @@ wwv_flow_api.create_plugin(
 '                else ''R''||p_region.id',
 '                end;',
 '    ',
-'    l_script := replace(''',
+'    l_script := ''<script>',
 'var opt_#REGION# = {',
-'   container: "map_#REGION#_container"',
-'  ,regionId: "#REGION#"',
-'  ,initZoom: ''||l_zoom||''',
-'  ,initLat: ''||TO_CHAR(l_lat,''fm999.9999999999999999'')||''',
-'  ,initLng: ''||TO_CHAR(l_lng,''fm999.9999999999999999'')||''',
-'  ,markerZoom: ''||l_marker_zoom||''',
-'  ,icon: "''||l_icon||''"',
-'  ,syncItem: "''||l_item_name||''"',
-'  ,geocodeItem: "''||l_geocode_item||''"',
-'  ,country: "''||l_country||''"''||',
-'  CASE WHEN l_mapstyle IS NOT NULL THEN ''',
-'  ,mapstyle: ''||l_mapstyle',
-'  END || ''',
-'  ,addressItem: "''||l_address_item||''"''||',
-'  CASE WHEN l_geolocate = ''Y'' THEN ''',
-'  ,geolocate: true'' ||',
-'    CASE WHEN l_geoloc_zoom IS NOT NULL THEN ''',
-'  ,geolocateZoom: ''||l_geoloc_zoom',
-'    END',
-'  END || ''',
-'  ,readonly: ''||l_readonly||''',
-'  ,zoom: ''||l_zoom_enabled||''',
-'  ,pan: ''||l_pan_enabled||''',
-'  ,gestureHandling: "''||nvl(l_gesture_handling,''auto'')||''"',
+'container:"map_#REGION#_container"',
+',regionId:"#REGION#"',
+',initZoom:'' || l_zoom || ''',
+',initLat:'' || to_char(l_lat,g_tochar_format) || ''',
+',initLng:'' || to_char(l_lng,g_tochar_format) || ''',
+',markerZoom:'' || l_marker_zoom || ''',
+',icon:"'' || l_icon || ''"',
+',syncItem:"'' || l_item_name || ''"',
+',geocodeItem:"'' || l_geocode_item || ''"',
+',country:"'' || l_country || ''"''',
+'||   case when l_mapstyle is not null then ''',
+',mapstyle:'' || l_mapstyle',
+'     end || ''',
+',addressItem:"'' || l_address_item || ''"''',
+'||   case when l_geolocate = ''Y'' then ''',
+',geolocate:true''',
+'     ||   case when l_geoloc_zoom is not null then ''',
+',geolocateZoom:'' || l_geoloc_zoom',
+'          end',
+'     end || ''',
+',readonly:'' || l_readonly || ''',
+',zoom:'' || l_zoom_enabled || ''',
+',pan:'' || l_pan_enabled || ''',
+',gestureHandling:"'' || l_gesture_handling || ''"',
 '};',
 'function r_#REGION#(f){/in/.test(document.readyState)?setTimeout("r_#REGION#("+f+")",9):f()}',
-'r_#REGION#(function(){',
-'  simplemap.init(opt_#REGION#);',
-'});',
-'function click_#REGION#(lat,lng) {',
-'  simplemap.setMarker(opt_#REGION#,lat,lng);',
-'}',
-''',''#REGION#'',l_region);',
+'r_#REGION#(function(){simplemap.init(opt_#REGION#);});',
+'function click_#REGION#(lat,lng) {simplemap.setMarker(opt_#REGION#,lat,lng);}',
+'</script>',
+'<div id="map_#REGION#_container" style="min-height:'' || l_region_height || ''px"></div>'';',
 '',
-'  sys.htp.p(''<script>''||l_script||''</script>'');',
-'  sys.htp.p(''<div id="map_''||l_region||''_container" style="min-height:''||l_region_height||''px"></div>'');',
+'  sys.htp.p(replace(l_script,''#REGION#'',l_region));',
 '',
 '  return l_result;',
-'end render_map;'))
-,p_render_function=>'render_map'
+'end render;',
+''))
+,p_render_function=>'render'
 ,p_substitute_attributes=>true
 ,p_subscribe_plugin_settings=>true
 ,p_help_text=>'Add a region of this type to your page and you have a map which the user can click to set a single Marker. If you set Synchronize with Item it will copy the lat,lng that the user clicks into that item; also, if the item is changed the map will move t'
 ||'he marker to the new location. If you set an Address item and your Google API Key, it will do a reverse geocode and put the first address result into it. You can also get the address clicked on via the "address" event whereby you can get each compone'
 ||'nt of an address (e.g. street number, road, locality, etc.) as separate strings.'
-,p_version_identifier=>'0.6'
+,p_version_identifier=>'0.7'
 ,p_about_url=>'https://github.com/jeffreykemp/jk64-plugin-simplemap'
-,p_files_version=>28
+,p_files_version=>32
 );
 wwv_flow_api.create_plugin_attribute(
  p_id=>wwv_flow_api.id(460954154970738655)
@@ -7724,9 +7729,9 @@ wwv_flow_api.create_plugin_attribute(
 ,p_display_sequence=>10
 ,p_prompt=>'Google API Key'
 ,p_attribute_type=>'TEXT'
-,p_is_required=>false
+,p_is_required=>true
 ,p_is_translatable=>false
-,p_help_text=>'Optional. If you don''t set this, you may get a "Google Maps API warning: NoApiKeys" warning in the console log. Refer: https://developers.google.com/maps/documentation/javascript/get-api-key#get-an-api-key'
+,p_help_text=>'Google Maps API key is required. Refer: https://developers.google.com/maps/documentation/javascript/get-api-key#get-an-api-key'
 );
 wwv_flow_api.create_plugin_attribute(
  p_id=>wwv_flow_api.id(451819937752798136)
@@ -7836,7 +7841,7 @@ wwv_flow_api.create_plugin_attribute(
 ,p_is_required=>false
 ,p_default_value=>'N'
 ,p_is_translatable=>false
-,p_help_text=>'Set to Yes to enable Google sign-in on the map. Only works if you set the Google API Key.'
+,p_help_text=>'Set to Yes to enable Google sign-in on the map.'
 );
 wwv_flow_api.create_plugin_attribute(
  p_id=>wwv_flow_api.id(460957626548832231)
@@ -8089,7 +8094,7 @@ wwv_flow_api.g_varchar2_table(16) := '696F6E49642B222072656D6F7665206D61726B6572
 wwv_flow_api.g_varchar2_table(17) := '6729207B0D0A2020617065782E6465627567282273696D706C656D61702E6765744164647265737322293B0D0A09766172206C61746C6E67203D207B6C61743A206C61742C206C6E673A206C6E677D3B0D0A096F70742E67656F636F6465722E67656F63';
 wwv_flow_api.g_varchar2_table(18) := '6F6465287B276C6F636174696F6E273A206C61746C6E677D2C2066756E6374696F6E28726573756C74732C2073746174757329207B0D0A090969662028737461747573203D3D3D20676F6F676C652E6D6170732E47656F636F6465725374617475732E4F';
 wwv_flow_api.g_varchar2_table(19) := '4B29207B0D0A090909666F722028693D303B20693C726573756C74732E6C656E6774683B20692B2B29207B0D0A09090909617065782E6465627567286F70742E726567696F6E49642B2220726573756C745B222B692B225D3D222B726573756C74735B69';
-wwv_flow_api.g_varchar2_table(20) := '5D2E666F726D61747465645F616464726573732B222028222B726573756C74735B695D2E74797065732E6A6F696E28292B222922293B0D0A0909097D0D0A09090969662028726573756C74735B315D29207B0D0A090909092473286F70742E6164647265';
+wwv_flow_api.g_varchar2_table(20) := '5D2E666F726D61747465645F616464726573732B222028222B726573756C74735B695D2E74797065732E6A6F696E28292B222922293B0D0A0909097D0D0A09090969662028726573756C74735B305D29207B0D0A090909092473286F70742E6164647265';
 wwv_flow_api.g_varchar2_table(21) := '73734974656D2C726573756C74735B305D2E666F726D61747465645F61646472657373293B0D0A202020202020202076617220636F6D706F6E656E7473203D20726573756C74735B305D2E616464726573735F636F6D706F6E656E74733B0D0A20202020';
 wwv_flow_api.g_varchar2_table(22) := '20202020666F722028693D303B20693C636F6D706F6E656E74732E6C656E6774683B20692B2B29207B0D0A20202020202020202020617065782E6465627567286F70742E726567696F6E49642B2220726573756C745B305D20222B636F6D706F6E656E74';
 wwv_flow_api.g_varchar2_table(23) := '735B695D2E74797065732B223D222B636F6D706F6E656E74735B695D2E73686F72745F6E616D652B222028222B636F6D706F6E656E74735B695D2E6C6F6E675F6E616D652B222922293B0D0A20202020202020207D0D0A2020202020202020617065782E';
@@ -8120,10 +8125,12 @@ wwv_flow_api.g_varchar2_table(47) := '0924282223222B6F70742E67656F636F6465497465
 wwv_flow_api.g_varchar2_table(48) := '2E67656F6C6F6361746529207B0D0A0909696620286E6176696761746F722E67656F6C6F636174696F6E29207B0D0A090909617065782E6465627567286F70742E726567696F6E49642B222067656F6C6F6361746522293B0D0A0909096E617669676174';
 wwv_flow_api.g_varchar2_table(49) := '6F722E67656F6C6F636174696F6E2E67657443757272656E74506F736974696F6E2866756E6374696F6E28706F736974696F6E29207B0D0A0909090976617220706F73203D207B0D0A09090909096C61743A20706F736974696F6E2E636F6F7264732E6C';
 wwv_flow_api.g_varchar2_table(50) := '617469747564652C0D0A09090909096C6E673A20706F736974696F6E2E636F6F7264732E6C6F6E6769747564650D0A090909097D3B0D0A090909096F70742E6D61702E70616E546F28706F73293B0D0A09090909696620286F70742E67656F6C6F636174';
-wwv_flow_api.g_varchar2_table(51) := '655A6F6F6D29207B0D0A0909090920206F70742E6D61702E7365745A6F6F6D286F70742E67656F6C6F636174655A6F6F6D293B0D0A090909097D0D0A09090909617065782E6A5175657279282223222B6F70742E726567696F6E4964292E747269676765';
-wwv_flow_api.g_varchar2_table(52) := '72282267656F6C6F63617465222C207B6D61703A6F70742E6D61702C206C61743A706F732E6C61742C206C6E673A706F732E6C6E677D293B0D0A0909097D293B0D0A09097D20656C7365207B0D0A090909617065782E6465627567286F70742E72656769';
-wwv_flow_api.g_varchar2_table(53) := '6F6E49642B222062726F7773657220646F6573206E6F7420737570706F72742067656F6C6F636174696F6E22293B0D0A09097D0D0A097D0D0A09617065782E6A5175657279282223222B6F70742E726567696F6E4964292E7472696767657228226D6170';
-wwv_flow_api.g_varchar2_table(54) := '6C6F61646564222C207B6D61703A6F70742E6D61707D293B0D0A7D0D0A0D0A7D';
+wwv_flow_api.g_varchar2_table(51) := '655A6F6F6D29207B0D0A0909090920206F70742E6D61702E7365745A6F6F6D286F70742E67656F6C6F636174655A6F6F6D293B0D0A090909097D0D0A2020202020202020696620286F70742E73796E634974656D213D3D222229207B0D0A202020202020';
+wwv_flow_api.g_varchar2_table(52) := '202020202473286F70742E73796E634974656D2C706F732E6C61742B222C222B706F732E6C6E67293B0D0A20202020202020207D0D0A2020202020202020696620286F70742E616464726573734974656D213D3D222229207B0D0A202020202020202020';
+wwv_flow_api.g_varchar2_table(53) := '2073696D706C656D61702E67657441646472657373286F70742C706F732E6C61742C706F732E6C6E67293B0D0A20202020202020207D0D0A09090909617065782E6A5175657279282223222B6F70742E726567696F6E4964292E74726967676572282267';
+wwv_flow_api.g_varchar2_table(54) := '656F6C6F63617465222C207B6D61703A6F70742E6D61702C206C61743A706F732E6C61742C206C6E673A706F732E6C6E677D293B0D0A0909097D293B0D0A09097D20656C7365207B0D0A090909617065782E6465627567286F70742E726567696F6E4964';
+wwv_flow_api.g_varchar2_table(55) := '2B222062726F7773657220646F6573206E6F7420737570706F72742067656F6C6F636174696F6E22293B0D0A09097D0D0A097D0D0A09617065782E6A5175657279282223222B6F70742E726567696F6E4964292E7472696767657228226D61706C6F6164';
+wwv_flow_api.g_varchar2_table(56) := '6564222C207B6D61703A6F70742E6D61707D293B0D0A7D0D0A0D0A7D';
 null;
 end;
 /
@@ -8132,7 +8139,7 @@ wwv_flow_api.create_plugin_file(
  p_id=>wwv_flow_api.id(84100026180778296)
 ,p_plugin_id=>wwv_flow_api.id(451789494362035918)
 ,p_file_name=>'simplemap.js'
-,p_mime_type=>'application/javascript'
+,p_mime_type=>'text/javascript'
 ,p_file_charset=>'utf-8'
 ,p_file_content=>wwv_flow_api.varchar2_to_blob(wwv_flow_api.g_varchar2_table)
 );
@@ -8153,7 +8160,7 @@ wwv_flow_api.g_varchar2_table(10) := '4D61726B6572287B6D61703A652E6D61702C706F73
 wwv_flow_api.g_varchar2_table(11) := '652E6D61726B65722E7365744D6170286E756C6C29297D2C676574416464726573733A66756E6374696F6E28652C6F2C61297B617065782E6465627567282273696D706C656D61702E6765744164647265737322293B76617220743D7B6C61743A6F2C6C';
 wwv_flow_api.g_varchar2_table(12) := '6E673A617D3B652E67656F636F6465722E67656F636F6465287B6C6F636174696F6E3A747D2C66756E6374696F6E286F2C61297B696628613D3D3D676F6F676C652E6D6170732E47656F636F6465725374617475732E4F4B297B666F7228693D303B693C';
 wwv_flow_api.g_varchar2_table(13) := '6F2E6C656E6774683B692B2B29617065782E646562756728652E726567696F6E49642B2220726573756C745B222B692B225D3D222B6F5B695D2E666F726D61747465645F616464726573732B222028222B6F5B695D2E74797065732E6A6F696E28292B22';
-wwv_flow_api.g_varchar2_table(14) := '2922293B6966286F5B315D297B247328652E616464726573734974656D2C6F5B305D2E666F726D61747465645F61646472657373293B76617220743D6F5B305D2E616464726573735F636F6D706F6E656E74733B666F7228693D303B693C742E6C656E67';
+wwv_flow_api.g_varchar2_table(14) := '2922293B6966286F5B305D297B247328652E616464726573734974656D2C6F5B305D2E666F726D61747465645F61646472657373293B76617220743D6F5B305D2E616464726573735F636F6D706F6E656E74733B666F7228693D303B693C742E6C656E67';
 wwv_flow_api.g_varchar2_table(15) := '74683B692B2B29617065782E646562756728652E726567696F6E49642B2220726573756C745B305D20222B745B695D2E74797065732B223D222B745B695D2E73686F72745F6E616D652B222028222B745B695D2E6C6F6E675F6E616D652B222922293B61';
 wwv_flow_api.g_varchar2_table(16) := '7065782E6A5175657279282223222B652E726567696F6E4964292E74726967676572282261646472657373222C7B6D61703A652E6D61702C726573756C743A6F5B305D7D297D656C73652077696E646F772E616C6572742822496E73756666696369656E';
 wwv_flow_api.g_varchar2_table(17) := '7420726573756C747320666F756E6422297D656C736520613D3D3D676F6F676C652E6D6170732E47656F636F6465725374617475732E5A45524F5F524553554C54533F77696E646F772E616C65727428224E6F20726573756C747320666F756E6422293A';
@@ -8173,9 +8180,10 @@ wwv_flow_api.g_varchar2_table(30) := '7279282223222B652E726567696F6E4964292E7472
 wwv_flow_api.g_varchar2_table(31) := '2E6D6170732E47656F636F6465723B24282223222B652E67656F636F64654974656D292E6368616E67652866756E6374696F6E28297B73696D706C656D61702E67656F636F646528652C6E297D297D652E67656F6C6F636174652626286E617669676174';
 wwv_flow_api.g_varchar2_table(32) := '6F722E67656F6C6F636174696F6E3F28617065782E646562756728652E726567696F6E49642B222067656F6C6F6361746522292C6E6176696761746F722E67656F6C6F636174696F6E2E67657443757272656E74506F736974696F6E2866756E6374696F';
 wwv_flow_api.g_varchar2_table(33) := '6E286F297B76617220613D7B6C61743A6F2E636F6F7264732E6C617469747564652C6C6E673A6F2E636F6F7264732E6C6F6E6769747564657D3B652E6D61702E70616E546F2861292C652E67656F6C6F636174655A6F6F6D2626652E6D61702E7365745A';
-wwv_flow_api.g_varchar2_table(34) := '6F6F6D28652E67656F6C6F636174655A6F6F6D292C617065782E6A5175657279282223222B652E726567696F6E4964292E74726967676572282267656F6C6F63617465222C7B6D61703A652E6D61702C6C61743A612E6C61742C6C6E673A612E6C6E677D';
-wwv_flow_api.g_varchar2_table(35) := '297D29293A617065782E646562756728652E726567696F6E49642B222062726F7773657220646F6573206E6F7420737570706F72742067656F6C6F636174696F6E2229292C617065782E6A5175657279282223222B652E726567696F6E4964292E747269';
-wwv_flow_api.g_varchar2_table(36) := '6767657228226D61706C6F61646564222C7B6D61703A652E6D61707D297D7D3B';
+wwv_flow_api.g_varchar2_table(34) := '6F6F6D28652E67656F6C6F636174655A6F6F6D292C2222213D3D652E73796E634974656D2626247328652E73796E634974656D2C612E6C61742B222C222B612E6C6E67292C2222213D3D652E616464726573734974656D262673696D706C656D61702E67';
+wwv_flow_api.g_varchar2_table(35) := '65744164647265737328652C612E6C61742C612E6C6E67292C617065782E6A5175657279282223222B652E726567696F6E4964292E74726967676572282267656F6C6F63617465222C7B6D61703A652E6D61702C6C61743A612E6C61742C6C6E673A612E';
+wwv_flow_api.g_varchar2_table(36) := '6C6E677D297D29293A617065782E646562756728652E726567696F6E49642B222062726F7773657220646F6573206E6F7420737570706F72742067656F6C6F636174696F6E2229292C617065782E6A5175657279282223222B652E726567696F6E496429';
+wwv_flow_api.g_varchar2_table(37) := '2E7472696767657228226D61706C6F61646564222C7B6D61703A652E6D61707D297D7D3B';
 null;
 end;
 /
@@ -8184,7 +8192,7 @@ wwv_flow_api.create_plugin_file(
  p_id=>wwv_flow_api.id(84104929671016582)
 ,p_plugin_id=>wwv_flow_api.id(451789494362035918)
 ,p_file_name=>'simplemap.min.js'
-,p_mime_type=>'application/javascript'
+,p_mime_type=>'text/javascript'
 ,p_file_charset=>'utf-8'
 ,p_file_content=>wwv_flow_api.varchar2_to_blob(wwv_flow_api.g_varchar2_table)
 );
@@ -8240,11 +8248,11 @@ wwv_flow_api.create_page(
 '<p>',
 'In addition, the region is synchronized with the P1_LAT_LONG item. Clicking the map will edit the item''s value; also, if you edit the item directly, it will update the map marker position.',
 '<p>',
-'If you set the Google API Key a geocode result will be retrieved and the various address components copied into the display items on the page.',
+'A geocode result will be retrieved and the various address components copied into the display items on the page.',
 '<p>',
 'The Map Style is <a href="https://snazzymaps.com/style/134/light-dream">"Light Dream"</a>.'))
 ,p_last_updated_by=>'JEFF'
-,p_last_upd_yyyymmddhh24miss=>'20180209201913'
+,p_last_upd_yyyymmddhh24miss=>'20181008190037'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(24993451701044461852)
@@ -8526,7 +8534,7 @@ wwv_flow_api.create_page(
 ']',
 '</code>'))
 ,p_last_updated_by=>'JEFF'
-,p_last_upd_yyyymmddhh24miss=>'20180209195356'
+,p_last_upd_yyyymmddhh24miss=>'20181008183416'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(30097686398806071537)
@@ -8634,6 +8642,265 @@ wwv_flow_api.create_page_da_action(
 '});',
 'apex.debug("show info window on map at marker");',
 'opt_map.iw.open(this.data.map, opt_map.marker);'))
+);
+end;
+/
+prompt --application/pages/page_00003
+begin
+wwv_flow_api.create_page(
+ p_id=>3
+,p_user_interface_id=>wwv_flow_api.id(24993449914929461841)
+,p_name=>'Demo - Geolocate'
+,p_page_mode=>'NORMAL'
+,p_step_title=>'Demo - Geolocate'
+,p_step_sub_title=>'Demo - Geolocate'
+,p_step_sub_title_type=>'TEXT_WITH_SUBSTITUTIONS'
+,p_first_item=>'NO_FIRST_ITEM'
+,p_page_template_options=>'#DEFAULT#'
+,p_overwrite_navigation_list=>'N'
+,p_page_is_public_y_n=>'N'
+,p_cache_mode=>'NOCACHE'
+,p_help_text=>wwv_flow_utilities.join(wwv_flow_t_varchar2(
+'This map will ask your browser for your location. If this is successful, the map will zoom and pan to that location, plot it on the map, and then attempt a reverse geocode to get the address.',
+'<p>',
+'Note: the demo app will not store or transmit this information anywhere.'))
+,p_last_updated_by=>'JEFF'
+,p_last_upd_yyyymmddhh24miss=>'20181008192545'
+);
+wwv_flow_api.create_page_plug(
+ p_id=>wwv_flow_api.id(149994816758213832)
+,p_plug_name=>'Map'
+,p_region_name=>'mymap'
+,p_region_template_options=>'#DEFAULT#:t-Region--scrollBody'
+,p_plug_template=>wwv_flow_api.id(24993423791104461805)
+,p_plug_display_sequence=>10
+,p_include_in_reg_disp_sel_yn=>'Y'
+,p_plug_display_point=>'BODY'
+,p_plug_item_display_point=>'BELOW'
+,p_plug_source_type=>'PLUGIN_COM.JK64.SIMPLE_GOOGLE_MAP'
+,p_plug_query_row_template=>1
+,p_plug_query_options=>'DERIVED_REPORT_COLUMNS'
+,p_plug_header=>'Source: <a href="https://bitbucket.org/jk64/jk64-plugin-simplemap">https://bitbucket.org/jk64/jk64-plugin-simplemap</a>'
+,p_attribute_01=>'0,0'
+,p_attribute_02=>'2'
+,p_attribute_03=>'350'
+,p_attribute_04=>'P3_LAT_LONG'
+,p_attribute_05=>'16'
+,p_attribute_07=>'N'
+,p_attribute_11=>'P3_ADDRESS'
+,p_attribute_12=>'Y'
+,p_attribute_13=>'13'
+,p_attribute_17=>'greedy'
+);
+wwv_flow_api.create_page_plug(
+ p_id=>wwv_flow_api.id(149998877426213842)
+,p_plug_name=>'Notes'
+,p_region_template_options=>'#DEFAULT#:t-Region--scrollBody'
+,p_component_template_options=>'#DEFAULT#'
+,p_plug_template=>wwv_flow_api.id(24993423791104461805)
+,p_plug_display_sequence=>20
+,p_include_in_reg_disp_sel_yn=>'Y'
+,p_plug_new_grid_row=>false
+,p_plug_grid_column_span=>4
+,p_plug_display_point=>'BODY'
+,p_plug_source_type=>'NATIVE_HELP_TEXT'
+,p_plug_query_row_template=>1
+,p_plug_query_options=>'DERIVED_REPORT_COLUMNS'
+);
+wwv_flow_api.create_page_item(
+ p_id=>wwv_flow_api.id(149995297371213833)
+,p_name=>'P3_INFO'
+,p_item_sequence=>10
+,p_item_plug_id=>wwv_flow_api.id(149994816758213832)
+,p_prompt=>'P3_INFO'
+,p_display_as=>'NATIVE_DISPLAY_ONLY'
+,p_field_template=>wwv_flow_api.id(24993444268681461824)
+,p_item_template_options=>'#DEFAULT#'
+,p_attribute_01=>'N'
+,p_attribute_02=>'VALUE'
+,p_attribute_04=>'Y'
+);
+wwv_flow_api.create_page_item(
+ p_id=>wwv_flow_api.id(149995697602213838)
+,p_name=>'P3_LAT_LONG'
+,p_item_sequence=>20
+,p_item_plug_id=>wwv_flow_api.id(149994816758213832)
+,p_prompt=>'P3_LAT_LONG'
+,p_placeholder=>'lat,long'
+,p_display_as=>'NATIVE_TEXT_FIELD'
+,p_cSize=>30
+,p_field_template=>wwv_flow_api.id(24993444268681461824)
+,p_item_template_options=>'#DEFAULT#'
+,p_attribute_01=>'N'
+,p_attribute_02=>'N'
+,p_attribute_04=>'TEXT'
+,p_attribute_05=>'BOTH'
+);
+wwv_flow_api.create_page_item(
+ p_id=>wwv_flow_api.id(149996046282213838)
+,p_name=>'P3_ADDRESS'
+,p_item_sequence=>30
+,p_item_plug_id=>wwv_flow_api.id(149994816758213832)
+,p_prompt=>'Address'
+,p_display_as=>'NATIVE_DISPLAY_ONLY'
+,p_field_template=>wwv_flow_api.id(24993444268681461824)
+,p_item_template_options=>'#DEFAULT#'
+,p_attribute_01=>'Y'
+,p_attribute_02=>'VALUE'
+,p_attribute_04=>'Y'
+);
+wwv_flow_api.create_page_item(
+ p_id=>wwv_flow_api.id(149996405426213839)
+,p_name=>'P3_STREET_NUMBER'
+,p_item_sequence=>40
+,p_item_plug_id=>wwv_flow_api.id(149994816758213832)
+,p_prompt=>'Street number'
+,p_display_as=>'NATIVE_DISPLAY_ONLY'
+,p_field_template=>wwv_flow_api.id(24993444268681461824)
+,p_item_template_options=>'#DEFAULT#'
+,p_attribute_01=>'Y'
+,p_attribute_02=>'VALUE'
+,p_attribute_04=>'Y'
+);
+wwv_flow_api.create_page_item(
+ p_id=>wwv_flow_api.id(149996898088213839)
+,p_name=>'P3_ROUTE'
+,p_item_sequence=>50
+,p_item_plug_id=>wwv_flow_api.id(149994816758213832)
+,p_prompt=>'Route'
+,p_display_as=>'NATIVE_DISPLAY_ONLY'
+,p_field_template=>wwv_flow_api.id(24993444268681461824)
+,p_item_template_options=>'#DEFAULT#'
+,p_attribute_01=>'Y'
+,p_attribute_02=>'VALUE'
+,p_attribute_04=>'Y'
+);
+wwv_flow_api.create_page_item(
+ p_id=>wwv_flow_api.id(149997239528213840)
+,p_name=>'P3_LOCALITY'
+,p_item_sequence=>60
+,p_item_plug_id=>wwv_flow_api.id(149994816758213832)
+,p_prompt=>'Locality'
+,p_display_as=>'NATIVE_DISPLAY_ONLY'
+,p_field_template=>wwv_flow_api.id(24993444268681461824)
+,p_item_template_options=>'#DEFAULT#'
+,p_attribute_01=>'Y'
+,p_attribute_02=>'VALUE'
+,p_attribute_04=>'Y'
+);
+wwv_flow_api.create_page_item(
+ p_id=>wwv_flow_api.id(149997677891213840)
+,p_name=>'P3_AREA'
+,p_item_sequence=>70
+,p_item_plug_id=>wwv_flow_api.id(149994816758213832)
+,p_prompt=>'Locality'
+,p_display_as=>'NATIVE_DISPLAY_ONLY'
+,p_field_template=>wwv_flow_api.id(24993444268681461824)
+,p_item_template_options=>'#DEFAULT#'
+,p_attribute_01=>'Y'
+,p_attribute_02=>'VALUE'
+,p_attribute_04=>'Y'
+);
+wwv_flow_api.create_page_item(
+ p_id=>wwv_flow_api.id(149998091229213841)
+,p_name=>'P3_COUNTRY'
+,p_item_sequence=>80
+,p_item_plug_id=>wwv_flow_api.id(149994816758213832)
+,p_prompt=>'Country'
+,p_display_as=>'NATIVE_DISPLAY_ONLY'
+,p_field_template=>wwv_flow_api.id(24993444268681461824)
+,p_item_template_options=>'#DEFAULT#'
+,p_attribute_01=>'Y'
+,p_attribute_02=>'VALUE'
+,p_attribute_04=>'Y'
+);
+wwv_flow_api.create_page_item(
+ p_id=>wwv_flow_api.id(149998452552213842)
+,p_name=>'P3_POSTAL_CODE'
+,p_item_sequence=>90
+,p_item_plug_id=>wwv_flow_api.id(149994816758213832)
+,p_prompt=>'Postal Code'
+,p_display_as=>'NATIVE_DISPLAY_ONLY'
+,p_field_template=>wwv_flow_api.id(24993444268681461824)
+,p_item_template_options=>'#DEFAULT#'
+,p_attribute_01=>'Y'
+,p_attribute_02=>'VALUE'
+,p_attribute_04=>'Y'
+);
+wwv_flow_api.create_page_da_event(
+ p_id=>wwv_flow_api.id(150000511224213870)
+,p_name=>'map click'
+,p_event_sequence=>10
+,p_triggering_element_type=>'REGION'
+,p_triggering_region_id=>wwv_flow_api.id(149994816758213832)
+,p_bind_type=>'bind'
+,p_bind_event_type=>'PLUGIN_COM.JK64.SIMPLE_GOOGLE_MAP|REGION TYPE|mapclick'
+);
+wwv_flow_api.create_page_da_action(
+ p_id=>wwv_flow_api.id(150001008588213870)
+,p_event_id=>wwv_flow_api.id(150000511224213870)
+,p_event_result=>'TRUE'
+,p_action_sequence=>10
+,p_execute_on_page_init=>'N'
+,p_action=>'NATIVE_JAVASCRIPT_CODE'
+,p_attribute_01=>'$s("P3_INFO", "You clicked at: " + this.data.lat + "," + this.data.lng);'
+,p_stop_execution_on_error=>'Y'
+);
+wwv_flow_api.create_page_da_event(
+ p_id=>wwv_flow_api.id(149999424728213866)
+,p_name=>'address'
+,p_event_sequence=>20
+,p_triggering_element_type=>'REGION'
+,p_triggering_region_id=>wwv_flow_api.id(149994816758213832)
+,p_bind_type=>'bind'
+,p_bind_event_type=>'PLUGIN_COM.JK64.SIMPLE_GOOGLE_MAP|REGION TYPE|address'
+);
+wwv_flow_api.create_page_da_action(
+ p_id=>wwv_flow_api.id(149999931843213868)
+,p_event_id=>wwv_flow_api.id(149999424728213866)
+,p_event_result=>'TRUE'
+,p_action_sequence=>10
+,p_execute_on_page_init=>'N'
+,p_action=>'NATIVE_JAVASCRIPT_CODE'
+,p_attribute_01=>wwv_flow_utilities.join(wwv_flow_t_varchar2(
+'apex.debug("address_components found: "+this.data.result.address_components.length);',
+'',
+'$s("P3_STREET_NUMBER","");',
+'$s("P3_ROUTE","");',
+'$s("P3_LOCALITY","");',
+'$s("P3_AREA","");',
+'$s("P3_COUNTRY","");',
+'$s("P3_POSTAL_CODE","");',
+'',
+'var components = this.data.result.address_components;',
+'for (i=0; i<components.length; i++) {',
+'  switch (components[i].types[0]) {',
+'  case "street_number" : $s("P3_STREET_NUMBER", components[i].short_name); break;',
+'  case "route" : $s("P3_ROUTE", components[i].short_name); break;',
+'  case "locality" : $s("P3_LOCALITY", components[i].short_name); break;',
+'  case "administrative_area_level_1" : $s("P3_AREA", components[i].short_name); break;',
+'  case "country" : $s("P3_COUNTRY", components[i].short_name); break;',
+'  case "postal_code" : $s("P3_POSTAL_CODE", components[i].short_name); break;',
+'  }',
+'}'))
+);
+wwv_flow_api.create_page_da_event(
+ p_id=>wwv_flow_api.id(147430864761327129)
+,p_name=>'geolocate'
+,p_event_sequence=>30
+,p_triggering_element_type=>'REGION'
+,p_triggering_region_id=>wwv_flow_api.id(149994816758213832)
+,p_bind_type=>'bind'
+,p_bind_event_type=>'PLUGIN_COM.JK64.SIMPLE_GOOGLE_MAP|REGION TYPE|geolocate'
+);
+wwv_flow_api.create_page_da_action(
+ p_id=>wwv_flow_api.id(147430937066327130)
+,p_event_id=>wwv_flow_api.id(147430864761327129)
+,p_event_result=>'TRUE'
+,p_action_sequence=>10
+,p_execute_on_page_init=>'N'
+,p_action=>'NATIVE_JAVASCRIPT_CODE'
+,p_attribute_01=>'$s("P3_INFO", "Geolocate says you are here: " + this.data.lat + "," + this.data.lng);'
 );
 end;
 /
@@ -8762,26 +9029,6 @@ wwv_flow_api.create_page_process(
 ,p_process_name=>'Get Username Cookie'
 ,p_process_sql_clob=>':P101_USERNAME := apex_authentication.get_login_username_cookie;'
 );
-end;
-/
-prompt --application/deployment/definition
-begin
-null;
-end;
-/
-prompt --application/deployment/install
-begin
-null;
-end;
-/
-prompt --application/deployment/checks
-begin
-null;
-end;
-/
-prompt --application/deployment/buildoptions
-begin
-null;
 end;
 /
 prompt --application/end_environment
