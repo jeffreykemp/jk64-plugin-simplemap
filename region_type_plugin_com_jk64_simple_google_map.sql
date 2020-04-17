@@ -1,3 +1,4 @@
+prompt --application/set_environment
 set define off verify off feedback off
 whenever sqlerror exit sql.sqlcode rollback
 --------------------------------------------------------------------------------
@@ -5,24 +6,19 @@ whenever sqlerror exit sql.sqlcode rollback
 -- ORACLE Application Express (APEX) export file
 --
 -- You should run the script connected to SQL*Plus as the Oracle user
--- APEX_050000 or as the owner (parsing schema) of the application.
+-- APEX_180200 or as the owner (parsing schema) of the application.
 --
 -- NOTE: Calls to apex_application_install override the defaults below.
 --
 --------------------------------------------------------------------------------
 begin
 wwv_flow_api.import_begin (
- p_version_yyyy_mm_dd=>'2013.01.01'
-,p_release=>'5.0.4.00.12'
+ p_version_yyyy_mm_dd=>'2018.05.24'
+,p_release=>'18.2.0.00.12'
 ,p_default_workspace_id=>20749515040658038
 ,p_default_application_id=>76577
 ,p_default_owner=>'SAMPLE'
 );
-end;
-/
-prompt --application/ui_types
-begin
-null;
 end;
 /
 prompt --application/shared_components/plugins/region_type/com_jk64_simple_google_map
@@ -33,10 +29,42 @@ wwv_flow_api.create_plugin(
 ,p_name=>'COM.JK64.SIMPLE_GOOGLE_MAP'
 ,p_display_name=>'JK64 Simple Google Map'
 ,p_supported_ui_types=>'DESKTOP:JQM_SMARTPHONE'
-,p_plsql_code=>wwv_flow_utilities.join(wwv_flow_t_varchar2(
-'-- JK64 Simple Google Map v0.7',
+,p_plsql_code=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'/**********************************************************',
+'create or replace package jk64simplemap_pkg as',
+'-- jk64 JK64 Simple Google Map v0.8 Apr 2020',
 '',
-'g_tochar_format constant varchar2(100) := ''fm99999999999990.099999999999999999999999999999'';',
+'function render (',
+'    p_region in apex_plugin.t_region,',
+'    p_plugin in apex_plugin.t_plugin,',
+'    p_is_printer_friendly in boolean )',
+'return apex_plugin.t_region_render_result;',
+'',
+'end jk64simplemap_pkg;',
+'/',
+'',
+'create or replace package body jk64simplemap_pkg as',
+'**********************************************************/',
+'-- jk64 JK64 Simple Google Map v0.8 Apr 2020',
+'',
+'-- format to use to convert a lat/lng number to string for passing via javascript',
+'-- 0.0000001 is enough precision for the practical limit of commercial surveying, error up to +/- 11.132 mm at the equator',
+'g_tochar_format constant varchar2(100) := ''fm990.0999999'';',
+'',
+'subtype plugin_attr is varchar2(32767);',
+'',
+'procedure parse_latlng (p_val in varchar2, p_label in varchar2, p_lat out number, p_lng out number) is',
+'    delim_pos number;',
+'begin',
+'    -- allow space as the delimiter; this should be used in locales which use comma (,) as decimal separator',
+'    if instr(trim(p_val),'' '') > 0 then',
+'        delim_pos := instr(p_val,'' '');',
+'    else',
+'        delim_pos := instr(p_val,'','');',
+'    end if;',
+'    p_lat := apex_plugin_util.get_attribute_as_number(substr(p_val,1,delim_pos-1), p_label || '' latitude'');',
+'    p_lng := apex_plugin_util.get_attribute_as_number(substr(p_val,delim_pos+1), p_label || '' longitude'');',
+'end parse_latlng;',
 '',
 'function render (',
 '    p_region in apex_plugin.t_region,',
@@ -44,13 +72,11 @@ wwv_flow_api.create_plugin(
 '    p_is_printer_friendly in boolean )',
 'return apex_plugin.t_region_render_result',
 'as',
-'    subtype plugin_attr is varchar2(32767);',
 '',
 '    -- Variables',
 '    l_result       apex_plugin.t_region_render_result;',
 '    l_script       varchar2(32767);',
 '    l_region       varchar2(100);',
-'    l_js_params    varchar2(1000);',
 '    l_lat          number;',
 '    l_lng          number;',
 '    l_readonly     varchar2(1000) := ''false'';',
@@ -111,25 +137,23 @@ wwv_flow_api.create_plugin(
 '            raise_application_error(-20000, ''Pan attribute must evaluate to true or false.'');',
 '        end if;',
 '    end if;',
-'',
-'    if l_sign_in = ''Y'' then',
-'        l_js_params := ''&''||''signed_in=true'';',
-'    end if;',
 '    ',
 '    apex_javascript.add_library',
-'        (p_name                  => ''js?key='' || l_api_key || l_js_params',
-'        ,p_directory             => ''https://maps.googleapis.com/maps/api/''',
-'        ,p_skip_extension        => true);',
+'        (p_name           => ''js?key='' || l_api_key',
+'                          || case when l_sign_in = ''Y'' then',
+'                               ''&''||''signed_in=true''',
+'                             end',
+'        ,p_directory      => ''https://maps.googleapis.com/maps/api/''',
+'        ,p_skip_extension => true);',
 '',
 '    apex_javascript.add_library',
 '        (p_name                  => ''simplemap''',
 '        ,p_directory             => p_plugin.file_prefix',
 '        ,p_check_to_add_minified => true);',
 '    ',
-'    l_lat := to_number(substr(l_latlong,1,instr(l_latlong,'','')-1));',
-'    l_lng := to_number(substr(l_latlong,instr(l_latlong,'','')+1));',
-'    ',
-'    l_gesture_handling := nvl(l_gesture_handling,''auto'');',
+'    if l_latlong is not null then',
+'        parse_latlng(l_latlong, p_label=>''Initial Map Position'', p_lat=>l_lat, p_lng=>l_lng);',
+'    end if;',
 '    ',
 '    l_region := case',
 '                when p_region.static_id is not null',
@@ -162,7 +186,7 @@ wwv_flow_api.create_plugin(
 ',readonly:'' || l_readonly || ''',
 ',zoom:'' || l_zoom_enabled || ''',
 ',pan:'' || l_pan_enabled || ''',
-',gestureHandling:"'' || l_gesture_handling || ''"',
+',gestureHandling:"'' || nvl(l_gesture_handling,''auto'') || ''"',
 '};',
 'function r_#REGION#(f){/in/.test(document.readyState)?setTimeout("r_#REGION#("+f+")",9):f()}',
 'r_#REGION#(function(){simplemap.init(opt_#REGION#);});',
@@ -173,15 +197,30 @@ wwv_flow_api.create_plugin(
 '  sys.htp.p(replace(l_script,''#REGION#'',l_region));',
 '',
 '  return l_result;',
+'exception',
+'    when others then',
+'        apex_debug.error(sqlerrm);',
+'        apex_debug.message(dbms_utility.format_error_stack);',
+'        apex_debug.message(dbms_utility.format_call_stack);',
+'        raise;',
 'end render;',
-''))
+'',
+'/**********************************************************',
+'end jk64simplemap_pkg;',
+'/',
+'**********************************************************/'))
+,p_api_version=>1
 ,p_render_function=>'render'
 ,p_substitute_attributes=>true
 ,p_subscribe_plugin_settings=>true
-,p_help_text=>'Add a region of this type to your page and you have a map which the user can click to set a single Marker. If you set Synchronize with Item it will copy the lat,lng that the user clicks into that item; also, if the item is changed the map will move t'
-||'he marker to the new location. If you set an Address item and your Google API Key, it will do a reverse geocode and put the first address result into it. You can also get the address clicked on via the "address" event whereby you can get each compone'
-||'nt of an address (e.g. street number, road, locality, etc.) as separate strings.'
-,p_version_identifier=>'0.7'
+,p_help_text=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'Add a region of this type to your page and you have a map which the user can click to set a single Marker.',
+'',
+'If you set Synchronize with Item it will copy the lat,lng that the user clicks into that item; also, if the item is changed the map will move the marker to the new location.',
+'',
+'If you set an Address item and your Google API Key, it will do a reverse geocode and put the first address result into it. You can also get the address clicked on via the "address" event whereby you can get each component of an address (e.g. street n'
+||'umber, road, locality, etc.) as separate strings.'))
+,p_version_identifier=>'0.8'
 ,p_about_url=>'https://github.com/jeffreykemp/jk64-plugin-simplemap'
 ,p_files_version=>32
 );
@@ -279,7 +318,7 @@ wwv_flow_api.create_plugin_attribute(
 ,p_is_required=>false
 ,p_max_length=>4000
 ,p_is_translatable=>false
-,p_examples=>wwv_flow_utilities.join(wwv_flow_t_varchar2(
+,p_examples=>wwv_flow_string.join(wwv_flow_t_varchar2(
 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png',
 'http://maps.google.com/mapfiles/ms/icons/red-dot.png',
 'http://maps.google.com/mapfiles/ms/icons/purple-dot.png',
@@ -293,19 +332,6 @@ wwv_flow_api.create_plugin_attribute(
 'http://maps.google.com/mapfiles/ms/icons/purple-pushpin.png',
 'http://maps.google.com/mapfiles/ms/icons/red-pushpin.png'))
 ,p_help_text=>'URL to the icon to show for the marker. Leave blank for the default red Google pin.'
-);
-wwv_flow_api.create_plugin_attribute(
- p_id=>wwv_flow_api.id(460955230348744902)
-,p_plugin_id=>wwv_flow_api.id(451789494362035918)
-,p_attribute_scope=>'COMPONENT'
-,p_attribute_sequence=>7
-,p_display_sequence=>70
-,p_prompt=>'Enable Google Sign-In'
-,p_attribute_type=>'CHECKBOX'
-,p_is_required=>false
-,p_default_value=>'N'
-,p_is_translatable=>false
-,p_help_text=>'Set to Yes to enable Google sign-in on the map.'
 );
 wwv_flow_api.create_plugin_attribute(
  p_id=>wwv_flow_api.id(460957626548832231)
@@ -333,6 +359,7 @@ wwv_flow_api.create_plugin_attribute(
 ,p_max_length=>2
 ,p_is_translatable=>false
 ,p_depending_on_attribute_id=>wwv_flow_api.id(460957626548832231)
+,p_depending_on_has_to_exist=>true
 ,p_depending_on_condition_type=>'NOT_NULL'
 ,p_text_case=>'UPPER'
 ,p_examples=>'AU'
@@ -348,7 +375,7 @@ wwv_flow_api.create_plugin_attribute(
 ,p_attribute_type=>'TEXTAREA'
 ,p_is_required=>false
 ,p_is_translatable=>false
-,p_examples=>wwv_flow_utilities.join(wwv_flow_t_varchar2(
+,p_examples=>wwv_flow_string.join(wwv_flow_t_varchar2(
 'Here is an example, a light greyscale style map:',
 '<pre>',
 '[{"featureType":"water","elementType":"geometry","stylers":[{"color":"#e9e9e9"},{"lightness":17}]},{"featureType":"landscape","elementType":"geometry","stylers":[{"color":"#f5f5f5"},{"lightness":20}]},{"featureType":"road.highway","elementType":"geom'
@@ -361,7 +388,7 @@ wwv_flow_api.create_plugin_attribute(
 '<p>',
 'To hide the (clickable) POIs from the map, use this:',
 '<code>[{featureType:"poi",elementType:"labels",stylers:[{visibility:"off"}]}]</code>'))
-,p_help_text=>wwv_flow_utilities.join(wwv_flow_t_varchar2(
+,p_help_text=>wwv_flow_string.join(wwv_flow_t_varchar2(
 'You can generate map styles using this tool: http://gmaps-samples-v3.googlecode.com/svn/trunk/styledmaps/wizard/index.html',
 '<p>',
 'Another way is to copy one from a site like https://snazzymaps.com/'))
@@ -406,6 +433,7 @@ wwv_flow_api.create_plugin_attribute(
 ,p_unit=>'(0-23)'
 ,p_is_translatable=>false
 ,p_depending_on_attribute_id=>wwv_flow_api.id(166127726872043700)
+,p_depending_on_has_to_exist=>true
 ,p_depending_on_condition_type=>'EQUALS'
 ,p_depending_on_expression=>'Y'
 ,p_help_text=>'If geolocation is successful, pan map and zoom to this level.'
@@ -421,7 +449,7 @@ wwv_flow_api.create_plugin_attribute(
 ,p_is_required=>false
 ,p_show_in_wizard=>false
 ,p_is_translatable=>false
-,p_examples=>wwv_flow_utilities.join(wwv_flow_t_varchar2(
+,p_examples=>wwv_flow_string.join(wwv_flow_t_varchar2(
 '<code>true</code>',
 '<p>',
 '<code>:P1_ITEM IS NOT NULL</code>'))
@@ -438,7 +466,7 @@ wwv_flow_api.create_plugin_attribute(
 ,p_is_required=>false
 ,p_show_in_wizard=>false
 ,p_is_translatable=>false
-,p_examples=>wwv_flow_utilities.join(wwv_flow_t_varchar2(
+,p_examples=>wwv_flow_string.join(wwv_flow_t_varchar2(
 '<code>true</code>',
 '<p>',
 '<code>:P1_ITEM IS NOT NULL</code>'))
@@ -455,7 +483,7 @@ wwv_flow_api.create_plugin_attribute(
 ,p_is_required=>false
 ,p_show_in_wizard=>false
 ,p_is_translatable=>false
-,p_examples=>wwv_flow_utilities.join(wwv_flow_t_varchar2(
+,p_examples=>wwv_flow_string.join(wwv_flow_t_varchar2(
 '<code>true</code>',
 '<p>',
 '<code>:P1_ITEM IS NOT NULL</code>'))
@@ -483,8 +511,8 @@ wwv_flow_api.create_plugin_attr_value(
 ,p_display_sequence=>10
 ,p_display_value=>'cooperative'
 ,p_return_value=>'cooperative'
-,p_help_text=>wwv_flow_utilities.join(wwv_flow_t_varchar2(
-'Scroll events and one-finger touch gestures scroll the page, and do not zoom or pan the map. Two-finger touch gestures pan and zoom the map. Scroll events with a ctrl key or ⌘ key pressed zoom the map.',
+,p_help_text=>wwv_flow_string.join(wwv_flow_t_varchar2(
+unistr('Scroll events and one-finger touch gestures scroll the page, and do not zoom or pan the map. Two-finger touch gestures pan and zoom the map. Scroll events with a ctrl key or \2318 key pressed zoom the map.'),
 'In this mode the map cooperates with the page.'))
 );
 wwv_flow_api.create_plugin_attr_value(

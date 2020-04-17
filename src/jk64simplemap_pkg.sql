@@ -1,4 +1,6 @@
+/**********************************************************
 create or replace package jk64simplemap_pkg as
+-- jk64 JK64 Simple Google Map v0.8 Apr 2020
 
 function render (
     p_region in apex_plugin.t_region,
@@ -8,12 +10,29 @@ return apex_plugin.t_region_render_result;
 
 end jk64simplemap_pkg;
 /
-show err
 
 create or replace package body jk64simplemap_pkg as
--- JK64 Simple Google Map v0.7
+**********************************************************/
+-- jk64 JK64 Simple Google Map v0.8 Apr 2020
 
-g_tochar_format constant varchar2(100) := 'fm99999999999990.099999999999999999999999999999';
+-- format to use to convert a lat/lng number to string for passing via javascript
+-- 0.0000001 is enough precision for the practical limit of commercial surveying, error up to +/- 11.132 mm at the equator
+g_tochar_format constant varchar2(100) := 'fm990.0999999';
+
+subtype plugin_attr is varchar2(32767);
+
+procedure parse_latlng (p_val in varchar2, p_label in varchar2, p_lat out number, p_lng out number) is
+    delim_pos number;
+begin
+    -- allow space as the delimiter; this should be used in locales which use comma (,) as decimal separator
+    if instr(trim(p_val),' ') > 0 then
+        delim_pos := instr(p_val,' ');
+    else
+        delim_pos := instr(p_val,',');
+    end if;
+    p_lat := apex_plugin_util.get_attribute_as_number(substr(p_val,1,delim_pos-1), p_label || ' latitude');
+    p_lng := apex_plugin_util.get_attribute_as_number(substr(p_val,delim_pos+1), p_label || ' longitude');
+end parse_latlng;
 
 function render (
     p_region in apex_plugin.t_region,
@@ -21,13 +40,11 @@ function render (
     p_is_printer_friendly in boolean )
 return apex_plugin.t_region_render_result
 as
-    subtype plugin_attr is varchar2(32767);
 
     -- Variables
     l_result       apex_plugin.t_region_render_result;
     l_script       varchar2(32767);
     l_region       varchar2(100);
-    l_js_params    varchar2(1000);
     l_lat          number;
     l_lng          number;
     l_readonly     varchar2(1000) := 'false';
@@ -44,7 +61,7 @@ as
     l_item_name        plugin_attr := p_region.attribute_04;
     l_marker_zoom      plugin_attr := p_region.attribute_05;
     l_icon             plugin_attr := p_region.attribute_06;
-    l_sign_in          plugin_attr := p_region.attribute_07;
+    --[unused]         plugin_attr := p_region.attribute_07;
     l_geocode_item     plugin_attr := p_region.attribute_08;
     l_country          plugin_attr := p_region.attribute_09;
     l_mapstyle         plugin_attr := p_region.attribute_10;
@@ -88,25 +105,20 @@ begin
             raise_application_error(-20000, 'Pan attribute must evaluate to true or false.');
         end if;
     end if;
-
-    if l_sign_in = 'Y' then
-        l_js_params := '&'||'signed_in=true';
-    end if;
     
     apex_javascript.add_library
-        (p_name                  => 'js?key=' || l_api_key || l_js_params
-        ,p_directory             => 'https://maps.googleapis.com/maps/api/'
-        ,p_skip_extension        => true);
+        (p_name           => 'js?key=' || l_api_key
+        ,p_directory      => 'https://maps.googleapis.com/maps/api/'
+        ,p_skip_extension => true);
 
     apex_javascript.add_library
         (p_name                  => 'simplemap'
         ,p_directory             => p_plugin.file_prefix
         ,p_check_to_add_minified => true);
     
-    l_lat := to_number(substr(l_latlong,1,instr(l_latlong,',')-1));
-    l_lng := to_number(substr(l_latlong,instr(l_latlong,',')+1));
-    
-    l_gesture_handling := nvl(l_gesture_handling,'auto');
+    if l_latlong is not null then
+        parse_latlng(l_latlong, p_label=>'Initial Map Position', p_lat=>l_lat, p_lng=>l_lng);
+    end if;
     
     l_region := case
                 when p_region.static_id is not null
@@ -139,7 +151,7 @@ container:"map_#REGION#_container"
 ,readonly:' || l_readonly || '
 ,zoom:' || l_zoom_enabled || '
 ,pan:' || l_pan_enabled || '
-,gestureHandling:"' || l_gesture_handling || '"
+,gestureHandling:"' || nvl(l_gesture_handling,'auto') || '"
 };
 function r_#REGION#(f){/in/.test(document.readyState)?setTimeout("r_#REGION#("+f+")",9):f()}
 r_#REGION#(function(){simplemap.init(opt_#REGION#);});
@@ -150,8 +162,15 @@ function click_#REGION#(lat,lng) {simplemap.setMarker(opt_#REGION#,lat,lng);}
   sys.htp.p(replace(l_script,'#REGION#',l_region));
 
   return l_result;
+exception
+    when others then
+        apex_debug.error(sqlerrm);
+        apex_debug.message(dbms_utility.format_error_stack);
+        apex_debug.message(dbms_utility.format_call_stack);
+        raise;
 end render;
 
+/**********************************************************
 end jk64simplemap_pkg;
 /
-show err
+**********************************************************/
