@@ -12,11 +12,11 @@ You can also enable additional features including Search by Address (find a poin
 
 ## DEMO ##
 
-[https://apex.oracle.com/pls/apex/f?p=JK64_SIMPLE_MAP](https://apex.oracle.com/pls/apex/f?p=JK64_SIMPLE_MAP&c=JK64)
+[https://oracleapex.com/pls/apex/f?p=JK64_SIMPLE_MAP](https://oracleapex.com/pls/apex/f?p=JK64_SIMPLE_MAP&c=JK64)
 
 ## PRE-REQUISITES ##
 
-* [Oracle Application Express 5.0.3](https://apex.oracle.com) or later
+* [Oracle Application Express 5.0.3](https://oracleapex.com) or later
 * You need a [Google Maps API Key](https://developers.google.com/maps/documentation/javascript/get-api-key#get-an-api-key)
 
 ## INSTALLATION INSTRUCTIONS ##
